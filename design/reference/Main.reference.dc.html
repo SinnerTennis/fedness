@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Fedness — riferimento design (senza dati)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=Caveat:wght@500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+button,input{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid #B33C06;outline-offset:1px}
+input::placeholder{color:#5E584C;opacity:1}
+.fd-scroll{scrollbar-width:none}
+.fd-scroll::-webkit-scrollbar{display:none}
+@keyframes fd-pop{0%{transform:rotate(-8deg) scale(1.9);opacity:0}100%{transform:rotate(-8deg) scale(1);opacity:1}}
+.fd-pop{animation:fd-pop .28s cubic-bezier(.2,.9,.3,1.2) both}
+@media (prefers-reduced-motion:reduce){.fd-pop{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; overflow: hidden; background: #F0EBE1; color: #17150F; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.35">
+
+<sc-if value="{{isDiet}}" hint-placeholder-val="{{true}}">
+<div style="height: 784px; display: flex; flex-direction: column">
+  <header style="padding: 14px 16px 12px; border-bottom: 2px solid #17150F">
+    <div style="display: flex; gap: 4px">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+        <button onClick="{{d.pick}}" aria-label="{{d.name}}" aria-pressed="{{d.sel}}" style="flex: 1; min-width: 0; height: 58px; padding: 0; border: 1.5px solid #17150F; border-radius: 3px; background: {{d.bg}}; color: {{d.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; transition: background 0.2s">
+          <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 21px; line-height: 1">{{d.letter}}</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{d.icon}}"></path></svg>
+          <span aria-hidden="true" style="width: 20px; height: 3px; background: {{d.mark}}"></span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px">
+      <span style="flex: none; width: 34px; height: 34px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: #FF6A13; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.flame}}"></path></svg></span>
+      <div style="flex: 1; min-width: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 36px; line-height: 1">{{got}} <span style="font-weight: 500; font-size: 20px; color: #5E584C">/ {{tot}} kcal</span></div>
+      <div style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 19px; line-height: 1; color: {{leftCol}}">{{leftLabel}}</div>
+    </div>
+    <div role="img" aria-label="{{barLabel}}" style="display: flex; gap: 3px; height: 14px; margin-top: 8px">
+      <sc-for list="{{segs}}" as="g" hint-placeholder-count="5">
+        <div style="flex: {{g.grow}} 1 0; min-width: 0; box-sizing: border-box; border: 1.5px solid #17150F"><div style="height: 100%; width: {{g.pct}}; background: {{g.col}}; transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)"></div></div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 6px; margin-top: 8px">
+      <sc-for list="{{macroChips}}" as="c" hint-placeholder-count="3">
+        <span style="flex: 1; min-width: 0; height: 26px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: {{c.bg}}; display: flex; align-items: center; justify-content: center; gap: 5px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-size: 16px; line-height: 1"><span style="font-weight: 800">{{c.k}}</span><span style="font-weight: 600">{{c.v}}</span></span>
+      </sc-for>
+    </div>
+  </header>
+
+  <div class="fd-scroll" style="flex: 1; min-height: 0; overflow-y: auto; padding: 16px 16px 28px">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 48px; line-height: 0.95; text-transform: uppercase">{{dayName}}</h1>
+      <sc-if value="{{isToday}}" hint-placeholder-val="{{true}}">
+        <span style="border: 2px solid #B33C06; border-radius: 3px; padding: 2px 7px; color: #B33C06; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.14em; transform: rotate(-5deg)">OGGI</span>
+      </sc-if>
+    </div>
+    <div style="display: flex; margin-top: 8px">
+      <span style="min-height: 28px; box-sizing: border-box; padding: 2px 9px 2px 7px; border: 1.5px solid #17150F; border-radius: 3px; background: {{actBg}}; display: flex; align-items: center; gap: 6px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.02em"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{actIcon}}"></path></svg>{{activity}}</span>
+    </div>
+
+    <sc-if value="{{hasNote}}" hint-placeholder-val="{{false}}">
+      <div style="margin-top: 14px; border: 1.5px dashed #17150F; padding: 10px 12px">
+        <div style="display: flex; align-items: center; gap: 6px; color: #B33C06; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.14em"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.pin}}"></path></svg>NOTA DEL PIANO</div>
+        <p style="margin: 4px 0 0; font-size: 14.5px; line-height: 1.45; text-wrap: pretty">{{note}}</p>
+      </div>
+    </sc-if>
+
+    <sc-for list="{{meals}}" as="m" hint-placeholder-count="5">
+      <section style="margin-top: 22px">
+        <button onClick="{{m.toggleAll}}" role="checkbox" aria-checked="{{m.allOn}}" aria-label="{{m.aria}}" style="width: 100%; min-height: 52px; padding: 9px 0 8px; border: 0; border-top: 2px solid #17150F; background: none; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer">
+          <span style="flex: none; width: 32px; height: 32px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: {{m.iconBg}}; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{m.icon}}"></path></svg></span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+            <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 23px; line-height: 1; text-transform: uppercase">{{m.name}}</span>
+            <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 16px; line-height: 1; color: #5E584C">{{m.meta}}</span>
+          </span>
+          <span style="position: relative; flex: none; width: 26px; height: 26px; box-sizing: border-box; border: 2.5px solid #17150F; border-radius: 2px; background: {{m.box}}; transition: background 0.2s"><sc-if value="{{m.allOn}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" viewBox="0 0 34 30" width="34" height="30" style="position: absolute; left: -2px; top: -10px; overflow: visible"><path d="M5 17 C8 19 10 23 12 27 C15 17 22 8 31 3" fill="none" stroke="{{pen}}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span>
+        </button>
+        <sc-for list="{{m.foods}}" as="f" hint-placeholder-count="4">
+          <button onClick="{{f.toggle}}" role="checkbox" aria-checked="{{f.on}}" style="width: 100%; min-height: 48px; padding: 6px 0; border: 0; border-top: 1px dotted #8F8774; background: none; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer">
+            <span style="flex: 1; min-width: 0; font-size: 16px; line-height: 1.25; color: {{f.col}}; text-decoration: {{f.deco}}; text-decoration-color: {{pen}}; text-decoration-thickness: 2px">{{f.name}}</span>
+            <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 19px; white-space: nowrap; color: {{f.col}}">{{f.qty}}</span>
+            <span style="width: 34px; text-align: right; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 500; font-size: 16px; color: #5E584C">{{f.kcal}}</span>
+            <span style="position: relative; flex: none; width: 26px; height: 26px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 2px; background: {{f.box}}; transition: background 0.2s"><sc-if value="{{f.on}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" viewBox="0 0 34 30" width="34" height="30" style="position: absolute; left: -2px; top: -10px; overflow: visible"><path d="M5 17 C8 19 10 23 12 27 C15 17 22 8 31 3" fill="none" stroke="{{pen}}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span>
+          </button>
+        </sc-for>
+        <div style="padding-top: 8px; border-top: 1px dotted #8F8774; display: flex; align-items: center; gap: 14px">
+          <sc-for list="{{m.mac}}" as="q" hint-placeholder-count="3">
+            <span style="display: flex; align-items: center; gap: 5px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 15px; line-height: 1; letter-spacing: 0.03em; color: #5E584C"><span aria-hidden="true" style="width: 11px; height: 11px; box-sizing: border-box; border: 1.5px solid #17150F; background: {{q.bg}}"></span>{{q.t}}</span>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+
+    <section style="margin-top: 26px">
+      <div style="min-height: 52px; box-sizing: border-box; padding: 9px 0 8px; border-top: 2px solid #17150F; display: flex; align-items: center; gap: 10px">
+        <span style="flex: none; width: 32px; height: 32px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: #FF6FB0; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.cookie}}"></path></svg></span>
+        <h2 style="flex: 1; margin: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 23px; line-height: 1; text-transform: uppercase">Fuori piano</h2>
+        <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 17px">{{offTotal}} kcal</span>
+      </div>
+      <sc-for list="{{offItems}}" as="x" hint-placeholder-count="1">
+        <div style="min-height: 48px; border-top: 1px dotted #8F8774; display: flex; align-items: center; gap: 10px">
+          <span style="flex: 1; min-width: 0; font-family: 'Caveat', cursive; font-weight: 600; font-size: 24px; line-height: 1.1; color: {{pen}}">{{x.n}}</span>
+          <span style="font-family: 'Caveat', cursive; font-weight: 600; font-size: 24px; color: {{pen}}; white-space: nowrap">{{x.k}} kcal</span>
+          <button onClick="{{x.del}}" aria-label="{{x.aria}}" style="flex: none; width: 44px; height: 44px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.x}}"></path></svg></button>
+        </div>
+      </sc-for>
+      <form onSubmit="{{addOff}}" style="display: flex; align-items: flex-end; gap: 10px; padding-top: 10px; border-top: 1px dotted #8F8774">
+        <label style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0">
+          <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.1em; color: #5E584C">COSA HAI MANGIATO</span>
+          <input value="{{offN}}" onChange="{{setOffN}}" placeholder="scrivi qui" style="width: 100%; height: 40px; box-sizing: border-box; padding: 0 2px; border: 0; border-bottom: 1.5px solid #17150F; border-radius: 0; background: transparent; font-family: 'Caveat', cursive; font-weight: 600; font-size: 24px; color: {{pen}}">
+        </label>
+        <label style="flex: none; width: 70px; display: flex; flex-direction: column; gap: 0">
+          <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.1em; color: #5E584C">KCAL</span>
+          <input value="{{offK}}" onChange="{{setOffK}}" inputmode="numeric" placeholder="0" style="width: 100%; height: 40px; box-sizing: border-box; padding: 0 2px; border: 0; border-bottom: 1.5px solid #17150F; border-radius: 0; background: transparent; font-family: 'Caveat', cursive; font-weight: 600; font-size: 24px; color: {{pen}}">
+        </label>
+        <button type="submit" aria-label="Aggiungi al fuori piano" style="flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 3px; background: #17150F; color: #F0EBE1; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.plus}}"></path></svg></button>
+      </form>
+    </section>
+
+    <section style="margin-top: 26px">
+      <button onClick="{{toggleSubs}}" aria-expanded="{{subsOpen}}" style="width: 100%; min-height: 52px; padding: 9px 0 8px; border: 0; border-top: 2px solid #17150F; background: none; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer">
+        <span style="flex: none; width: 32px; height: 32px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: #B79CFF; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.swap}}"></path></svg></span>
+        <span style="flex: 1; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 23px; line-height: 1; text-transform: uppercase">Sostituzioni equivalenti</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{subsIcon}}"></path></svg>
+      </button>
+      <sc-if value="{{subsOpen}}" hint-placeholder-val="{{false}}">
+        <div>
+          <sc-for list="{{subs}}" as="u" hint-placeholder-count="3">
+            <div style="padding: 9px 0; border-top: 1px dotted #8F8774">
+              <div style="display: flex; align-items: baseline; gap: 8px">
+                <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #5E584C">{{u.g}}</span>
+                <span style="font-weight: 600; font-size: 15px">{{u.r}}</span>
+              </div>
+              <p style="margin: 3px 0 0; font-size: 14.5px; line-height: 1.45; text-wrap: pretty">{{u.e}}</p>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </section>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isStats}}" hint-placeholder-val="{{false}}">
+<div style="height: 784px; display: flex; flex-direction: column">
+  <header style="padding: 14px 16px 12px; border-bottom: 2px solid #17150F; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+    <h1 style="margin: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 48px; line-height: 0.9; text-transform: uppercase">Oggi</h1>
+    <span style="min-height: 28px; box-sizing: border-box; padding: 2px 9px 2px 7px; border: 1.5px solid #17150F; border-radius: 3px; background: {{todayBg}}; display: flex; align-items: center; gap: 6px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.02em"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{todayIcon}}"></path></svg>{{todayName}} · {{todayActivity}}</span>
+  </header>
+  <div class="fd-scroll" style="flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px 28px">
+    <div style="display: flex; align-items: center; gap: 16px">
+      <div role="img" aria-label="{{ringLabel}}" style="position: relative; flex: none; width: 172px; height: 172px">
+        <svg aria-hidden="true" viewBox="0 0 172 172" width="172" height="172" style="display: block; transform: rotate(-90deg)">
+          <circle cx="86" cy="86" r="74" fill="none" stroke="#DCD4C3" stroke-width="20"></circle>
+          <circle cx="86" cy="86" r="74" fill="none" stroke="{{heroCol}}" stroke-width="20" stroke-dasharray="{{ringDash}}" style="transition: stroke-dasharray 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)"></circle>
+          <circle cx="86" cy="86" r="84.25" fill="none" stroke="#17150F" stroke-width="1.5"></circle>
+          <circle cx="86" cy="86" r="63.75" fill="none" stroke="#17150F" stroke-width="1.5"></circle>
+        </svg>
+        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+          <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 60px; line-height: 0.9">{{scorePct}}<span style="font-size: 30px">%</span></span>
+          <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.14em; color: #5E584C">DEL PIANO</span>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 0">
+        <span style="flex: none; width: 34px; height: 34px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: #FF6A13; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.flame}}"></path></svg></span>
+        <div style="margin-top: 8px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 78px; line-height: 0.85; color: {{heroNumCol}}">{{heroNum}}</div>
+        <div style="margin-top: 6px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 20px; line-height: 1.02; text-transform: uppercase">{{heroCap1}}<br>{{heroCap2}}</div>
+        <div style="margin-top: 5px; font-size: 14px; color: #5E584C">{{eatenLine}}</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px; padding: 10px 12px; border-radius: 4px; background: #17150F; color: #F0EBE1; display: flex; align-items: center; gap: 12px">
+      <span style="flex: none; width: 38px; height: 38px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: #FFC72C; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.trophy}}"></path></svg></span>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.14em; color: #D8D0BF">LIVELLO</div>
+        <div style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 30px; line-height: 1">{{level}}</div>
+      </div>
+      <div style="text-align: right; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 16px; line-height: 1.15">{{levelHint1}}<br>{{levelHint2}}</div>
+    </div>
+
+    <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.clock}}"></path></svg>
+      <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.14em; color: #B33C06">{{nextTag}}</span>
+      <span style="font-weight: 600; font-size: 16px">{{nextName}}</span>
+      <span style="font-size: 14.5px; color: #5E584C">{{nextMeta}}</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px">
+      <sc-for list="{{tiles}}" as="k" hint-placeholder-count="6">
+        <div style="position: relative; min-height: 136px; box-sizing: border-box; padding: 10px 11px 11px; border: 1.5px solid #17150F; border-radius: 4px; background: {{k.bg}}; color: #17150F; display: flex; flex-direction: column">
+          <div style="display: flex; align-items: center; gap: 6px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{k.icon}}"></path></svg>{{k.label}}</div>
+          <div style="margin-top: 4px; display: flex; align-items: baseline; gap: 6px">
+            <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 56px; line-height: 0.95">{{k.big}}</span>
+            <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 19px">{{k.of}}</span>
+          </div>
+          <div style="margin-top: auto; padding-top: 8px">
+            <sc-if value="{{k.hasBar}}" hint-placeholder-val="{{true}}">
+              <div role="progressbar" aria-label="{{k.label}}" aria-valuenow="{{k.now}}" aria-valuemin="0" aria-valuemax="{{k.max}}" style="height: 12px; box-sizing: border-box; border: 1.5px solid #17150F; background: rgba(240, 235, 225, 0.55)"><div style="height: 100%; width: {{k.pct}}; background: #17150F; transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)"></div></div>
+            </sc-if>
+            <sc-if value="{{k.hasDots}}" hint-placeholder-val="{{false}}">
+              <div aria-hidden="true" style="display: flex; gap: 4px">
+                <sc-for list="{{k.dots}}" as="o" hint-placeholder-count="5">
+                  <span style="flex: 1; max-width: 24px; height: 14px; box-sizing: border-box; border: 1.5px solid #17150F; background: {{o.bg}}; transition: background 0.3s"></span>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="margin-top: 6px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 15px; line-height: 1.1">{{k.sub}}</div>
+          </div>
+          <sc-if value="{{k.done}}" hint-placeholder-val="{{false}}">
+            <span class="fd-pop" style="position: absolute; top: 7px; right: 8px; padding: 0 5px; border: 2px solid #17150F; border-radius: 3px; background: #F0EBE1; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: 0.1em; transform: rotate(-8deg)">FATTO</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="margin-top: 24px; min-height: 52px; box-sizing: border-box; padding: 9px 0 8px; border-top: 2px solid #17150F; display: flex; align-items: center; gap: 10px">
+      <span style="flex: none; width: 32px; height: 32px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: #B6F23A; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.leaf}}"></path></svg></span>
+      <h2 style="flex: 1; margin: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 23px; line-height: 1; text-transform: uppercase">Micro</h2>
+      <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.1em; color: #5E584C">STIMA / OBIETTIVO</span>
+    </div>
+    <div>
+      <sc-for list="{{micros}}" as="r" hint-placeholder-count="9">
+        <div style="min-height: 40px; border-top: 1px dotted #8F8774; display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; align-items: center; gap: 10px">
+          <span style="font-size: 15px">{{r.name}} <span style="font-size: 12.5px; color: #5E584C">{{r.maxTag}}</span></span>
+          <div role="progressbar" aria-label="{{r.name}}" aria-valuenow="{{r.now}}" aria-valuemin="0" aria-valuemax="{{r.max}}" style="height: 12px; box-sizing: border-box; border: 1.5px solid #17150F"><div style="height: 100%; width: {{r.pct}}; background: {{r.bar}}; transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)"></div></div>
+          <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-size: 17px; white-space: nowrap; color: {{r.col}}"><span style="font-weight: 700">{{r.val}}</span> / {{r.target}}{{r.overTag}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin: 12px 0 0; font-size: 13px; line-height: 1.45; color: #5E584C">Stime da valori medi per 100 g. Il fuori piano conta solo nelle kcal.</p>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{isShop}}" hint-placeholder-val="{{false}}">
+<div style="height: 784px; display: flex; flex-direction: column">
+  <header style="padding: 14px 16px 12px; border-bottom: 2px solid #17150F">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 48px; line-height: 0.9; text-transform: uppercase">Spesa</h1>
+      <div style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 36px; line-height: 0.9">{{shopDone}}<span style="font-weight: 500; font-size: 20px; color: #5E584C"> / {{shopAll}} presi</span></div>
+    </div>
+    <div role="progressbar" aria-label="Prodotti presi" aria-valuenow="{{shopDone}}" aria-valuemin="0" aria-valuemax="{{shopAll}}" style="height: 14px; box-sizing: border-box; margin-top: 10px; border: 1.5px solid #17150F"><div style="height: 100%; width: {{shopPct}}; background: #B6F23A; transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)"></div></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px">
+      <span style="height: 28px; box-sizing: border-box; padding: 0 9px 0 6px; border: 1.5px solid #17150F; border-radius: 3px; background: #FFC72C; display: flex; align-items: center; gap: 5px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 16px"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.euro}}"></path></svg>restano circa {{shopLeft}} €</span>
+      <button onClick="{{toggleHide}}" role="switch" aria-checked="{{hide}}" style="min-height: 44px; padding: 0; border: 0; background: none; display: flex; align-items: center; gap: 7px; cursor: pointer">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.eyeoff}}"></path></svg>
+        <span style="font-size: 15px">Nascondi presi</span>
+        <span style="position: relative; width: 22px; height: 22px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 2px; background: {{hideBox}}"><sc-if value="{{hide}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" viewBox="0 0 34 30" width="28" height="25" style="position: absolute; left: -1px; top: -8px; overflow: visible"><path d="M5 17 C8 19 10 23 12 27 C15 17 22 8 31 3" fill="none" stroke="{{pen}}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span>
+      </button>
+    </div>
+    <form onSubmit="{{addExtra}}" style="display: flex; align-items: flex-end; gap: 10px">
+      <label style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+        <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.1em; color: #5E584C">AGGIUNGI PRODOTTO</span>
+        <input value="{{addN}}" onChange="{{setAddN}}" enterkeyhint="done" placeholder="scrivi qui" style="width: 100%; height: 40px; box-sizing: border-box; padding: 0 2px; border: 0; border-bottom: 1.5px solid #17150F; border-radius: 0; background: transparent; font-family: 'Caveat', cursive; font-weight: 600; font-size: 24px; color: {{pen}}">
+      </label>
+      <button type="submit" aria-label="Aggiungi alla spesa" style="flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 3px; background: #17150F; color: #F0EBE1; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.plus}}"></path></svg></button>
+    </form>
+  </header>
+
+  <div class="fd-scroll" style="flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 28px">
+    <sc-if value="{{shopEmpty}}" hint-placeholder-val="{{false}}">
+      <p style="margin: 56px 0 0; text-align: center; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 34px; text-transform: uppercase">Tutto preso.</p>
+    </sc-if>
+    <sc-if value="{{hasExtras}}" hint-placeholder-val="{{true}}">
+      <section style="margin-top: 18px">
+        <div style="min-height: 52px; box-sizing: border-box; padding: 9px 0 8px; border-top: 2px solid #17150F; display: flex; align-items: center; gap: 10px">
+          <span style="flex: none; width: 32px; height: 32px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: #F0EBE1; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.pencil}}"></path></svg></span>
+          <h2 style="flex: 1; margin: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 21px; line-height: 1; text-transform: uppercase">Aggiunti a mano</h2>
+          <span style="padding: 1px 7px; border: 1.5px solid #17150F; border-radius: 3px; background: {{extraCountBg}}; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 16px">{{extraCount}}</span>
+        </div>
+        <sc-for list="{{extras}}" as="x" hint-placeholder-count="1">
+          <div style="min-height: 52px; border-top: 1px dotted #8F8774; display: flex; align-items: center; gap: 4px">
+            <button onClick="{{x.toggle}}" role="checkbox" aria-checked="{{x.on}}" style="flex: 1; min-width: 0; min-height: 52px; padding: 0; border: 0; background: none; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer">
+              <span style="flex: 1; min-width: 0; font-family: 'Caveat', cursive; font-weight: 600; font-size: 25px; line-height: 1.1; color: {{pen}}; text-decoration: {{x.deco}}; text-decoration-thickness: 2px">{{x.n}}</span>
+            </button>
+            <button onClick="{{x.del}}" aria-label="{{x.aria}}" style="flex: none; width: 44px; height: 44px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.x}}"></path></svg></button>
+            <button onClick="{{x.toggle}}" aria-hidden="true" tabindex="-1" style="flex: none; position: relative; width: 26px; height: 26px; box-sizing: border-box; padding: 0; border: 1.5px solid #17150F; border-radius: 2px; background: {{x.box}}; cursor: pointer"><sc-if value="{{x.on}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" viewBox="0 0 34 30" width="34" height="30" style="position: absolute; left: -3px; top: -11px; overflow: visible"><path d="M5 17 C8 19 10 23 12 27 C15 17 22 8 31 3" fill="none" stroke="{{pen}}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></button>
+          </div>
+        </sc-for>
+      </section>
+    </sc-if>
+
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <section style="margin-top: 18px">
+        <div style="min-height: 52px; box-sizing: border-box; padding: 9px 0 8px; border-top: 2px solid #17150F; display: flex; align-items: center; gap: 10px">
+          <span style="flex: none; width: 32px; height: 32px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 3px; background: {{g.bg}}; color: #17150F; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{g.icon}}"></path></svg></span>
+          <h2 style="flex: 1; min-width: 0; margin: 0; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 21px; line-height: 1; text-transform: uppercase">{{g.name}}</h2>
+          <span style="padding: 1px 7px; border: 1.5px solid #17150F; border-radius: 3px; background: {{g.countBg}}; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 16px; transition: background 0.2s">{{g.count}}</span>
+        </div>
+        <sc-for list="{{g.items}}" as="i" hint-placeholder-count="5">
+          <button onClick="{{i.toggle}}" role="checkbox" aria-checked="{{i.on}}" style="width: 100%; min-height: 52px; padding: 8px 0; border: 0; border-top: 1px dotted #8F8774; background: none; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer">
+            <span style="flex: 1; min-width: 0; font-size: 16px; line-height: 1.25; color: {{i.col}}; text-decoration: {{i.deco}}; text-decoration-color: {{pen}}; text-decoration-thickness: 2px">{{i.n}}</span>
+            <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 19px; white-space: nowrap; color: {{i.col}}">{{i.q}}</span>
+            <span style="position: relative; flex: none; width: 26px; height: 26px; box-sizing: border-box; border: 1.5px solid #17150F; border-radius: 2px; background: {{i.box}}; transition: background 0.2s"><sc-if value="{{i.on}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" viewBox="0 0 34 30" width="34" height="30" style="position: absolute; left: -2px; top: -10px; overflow: visible"><path d="M5 17 C8 19 10 23 12 27 C15 17 22 8 31 3" fill="none" stroke="{{pen}}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span>
+          </button>
+        </sc-for>
+      </section>
+    </sc-for>
+
+    <button onClick="{{resetShop}}" style="width: 100%; min-height: 50px; margin-top: 30px; padding: 0 12px; border: 1.5px solid #17150F; border-radius: 3px; background: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{ic.refresh}}"></path></svg>Nuova spesa</button>
+    <p style="margin: 8px 0 0; text-align: center; font-size: 13px; color: #5E584C">Azzera le spunte e i prodotti aggiunti a mano.</p>
+  </div>
+</div>
+</sc-if>
+
+<nav aria-label="Sezioni" style="height: 60px; box-sizing: border-box; border-top: 2px solid #17150F; display: flex">
+  <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+    <button onClick="{{t.go}}" aria-pressed="{{t.on}}" style="flex: 1; min-width: 0; padding: 0; border: 0; border-left: {{t.bl}}; background: {{t.bg}}; color: {{t.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer">
+      <span style="display: flex; align-items: center; gap: 6px; font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 20px; line-height: 1; letter-spacing: 0.1em"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; display: block"><path d="{{t.icon}}"></path></svg>{{t.label}}</span>
+      <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 500; font-size: 14px; line-height: 1; letter-spacing: 0.03em; color: {{t.subfg}}">{{t.sub}}</span>
+    </button>
+  </sc-for>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"startTab":{"editor":"enum","options":["diet","stats","shop"],"default":"diet","section":"Schermata"},"pen":{"editor":"color","default":"#1F3FA6","options":["#1F3FA6","#17150F","#A3241B","#1D6B3C"],"section":"Penna"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  state = this.seed();
+
+  data() {
+    if (this._d) return this._d;
+    // Pasto: [nome, ora, [alimenti], kcal, P, C, G] — da data.js
+    const DIET = []; // DATI RIMOSSI: arrivano da data.js / data.enc.json (mai in chiaro nel repo)
+    // per 100 g: [kcal, P, C, G, fibre, sodio, potassio, calcio, ferro, magnesio, vit C, vit D, B12]
+    const FOODS = {}; // DATI RIMOSSI
+    const SUBS = []; // DATI RIMOSSI
+    const SHOPPING = []; // DATI RIMOSSI
+    // [nome, unità, obiettivo giornaliero, è un massimo?]
+    const MICROS = [
+      ["Fibre", "g", 30], ["Sodio", "mg", 2000, true], ["Potassio", "mg", 3900], ["Calcio", "mg", 1000],
+      ["Ferro", "mg", 10], ["Magnesio", "mg", 240], ["Vitamina C", "mg", 105], ["Vitamina D", "µg", 15], ["Vitamina B12", "µg", 2.4]
+    ];
+    const keep = (a) => { let acc = 0, prev = 0; return a.map((v) => { acc += v; const x = Math.round(acc) - prev; prev += x; return x; }); };
+    DIET.forEach((d) => {
+      d.tot = [3, 4, 5, 6].map((j) => d.meals.reduce((s, m) => s + m[j], 0));
+      d.meals.forEach((m) => {
+        const parts = m[2].map((t) => {
+          const r = t.match(/^(.*?)\s*([\d.]+)\s*(g|ml)$/);
+          return r ? { name: r[1], g: +r[2], qty: r[2] + " " + r[3] } : { name: t, g: 0, qty: "" };
+        });
+        const est = parts.map((p) => {
+          const f = FOODS[p.name.replace(/\s*\(.*?\)/g, "")] || new Array(13).fill(0);
+          return f.map((v) => v * p.g / 100);
+        });
+        const cols = [0, 1, 2, 3].map((j) => {
+          const tot = est.reduce((s, e) => s + e[j], 0);
+          return keep(est.map((e, i) => (tot ? e[j] * m[3 + j] / tot : (i ? 0 : m[3 + j]))));
+        });
+        m.foods = parts.map((p, i) => ({ name: p.name, qty: p.qty, v: cols.map((c) => c[i]), mic: est[i].slice(4) }));
+      });
+    });
+    // Tabler Icons 3.52.0 (MIT), outline, 24px, tratto 2 — i path di ogni icona uniti in un solo "d"
+    const IC = { "kitchen": "M19 3v12h-5c-.023 -3.681 .184 -7.406 5 -12m0 12v6h-1v-3m-10 -14v17m-3 -17v3a3 3 0 1 0 6 0v-3", "flame": "M12 10.941c2.333 -3.308 .167 -7.823 -1 -8.941c0 3.395 -2.235 5.299 -3.667 6.706c-1.43 1.408 -2.333 3.294 -2.333 5.588c0 3.704 3.134 6.706 7 6.706c3.866 0 7 -3.002 7 -6.706c0 -1.712 -1.232 -4.403 -2.333 -5.588c-2.084 3.353 -3.257 3.353 -4.667 2.235", "cart": "M4 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M15 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M17 17h-11v-14h-2 M6 5l14 1l-1 7h-13", "gym": "M2 12h1 M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2 M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1 M9 12h6 M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1 M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2 M22 12h-1", "swim": "M15 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0 M6 11l4 -2l3.5 3l-1.5 2 M3 16.75a2.4 2.4 0 0 0 1 .25a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 1 -.25", "rest": "M12 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0 M7 21l3 -4 M16 21l-2 -4l-3 -3l1 -6 M6 12l2 -3l4 -1l3 3l3 1", "coffee": "M3 14c.83 .642 2.077 1.017 3.5 1c1.423 .017 2.67 -.358 3.5 -1c.83 -.642 2.077 -1.017 3.5 -1c1.423 -.017 2.67 .358 3.5 1 M8 3a2.4 2.4 0 0 0 -1 2a2.4 2.4 0 0 0 1 2 M12 3a2.4 2.4 0 0 0 -1 2a2.4 2.4 0 0 0 1 2 M3 10h14v5a6 6 0 0 1 -6 6h-2a6 6 0 0 1 -6 -6v-5 M16.746 16.726a3 3 0 1 0 .252 -5.555", "apple": "M4 11.319c0 3.102 .444 5.319 2.222 7.978c1.351 1.797 3.156 2.247 5.08 .988c.426 -.268 .97 -.268 1.397 0c1.923 1.26 3.728 .809 5.079 -.988c1.778 -2.66 2.222 -4.876 2.222 -7.977c0 -2.661 -1.99 -5.32 -4.444 -5.32c-1.267 0 -2.41 .693 -3.22 1.44a.5 .5 0 0 1 -.672 0c-.809 -.746 -1.953 -1.44 -3.22 -1.44c-2.454 0 -4.444 2.66 -4.444 5.319 M7 12c0 -1.47 .454 -2.34 1.5 -3 M12 7c0 -1.2 .867 -4 3 -4", "bolt": "M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11", "moon": "M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008", "pizza": "M12 21.5c-3.04 0 -5.952 -.714 -8.5 -1.983l8.5 -16.517l8.5 16.517a19.09 19.09 0 0 1 -8.5 1.983 M5.38 15.866a14.94 14.94 0 0 0 6.815 1.634a14.944 14.944 0 0 0 6.502 -1.479 M13 11.01v-.01 M11 14v-.01", "plus": "M12 5l0 14 M5 12l14 0", "x": "M18 6l-12 12 M6 6l12 12", "down": "M6 9l6 6l6 -6", "up": "M6 15l6 -6l6 6", "swap": "M7 10h14l-4 -4 M17 14h-14l4 4", "cookie": "M8 13v.01 M12 17v.01 M12 12v.01 M16 14v.01 M11 8v.01 M13.148 3.476l2.667 1.104a4 4 0 0 0 4.656 6.14l.053 .132a3 3 0 0 1 0 2.296q -.745 1.18 -1.024 1.852q -.283 .684 -.66 2.216a3 3 0 0 1 -1.624 1.623q -1.572 .394 -2.216 .661q -.712 .295 -1.852 1.024a3 3 0 0 1 -2.296 0q -1.203 -.754 -1.852 -1.024q -.707 -.292 -2.216 -.66a3 3 0 0 1 -1.623 -1.624q -.397 -1.577 -.661 -2.216q -.298 -.718 -1.024 -1.852a3 3 0 0 1 0 -2.296q .719 -1.116 1.024 -1.852q .257 -.62 .66 -2.216a3 3 0 0 1 1.624 -1.623q 1.547 -.384 2.216 -.661q .687 -.285 1.852 -1.024a3 3 0 0 1 2.296 0", "pin": "M9 4v6l-2 4v2h10v-2l-2 -4v-6 M12 16l0 5 M8 4l8 0", "clock": "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 7v5l3 3", "trophy": "M8 21l8 0 M12 17l0 4 M7 4l10 0 M17 4v8a5 5 0 0 1 -10 0v-8 M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0", "target": "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0 M12 7a5 5 0 1 0 5 5 M13 3.055a9 9 0 1 0 7.941 7.945 M15 6v3h3l3 -3h-3v-3l-3 3 M15 9l-3 3", "week": "M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12 M16 3v4 M8 3v4 M4 11h16 M7 14h.013 M10.01 14h.005 M13.01 14h.005 M16.015 14h.005 M13.015 17h.005 M7.01 17h.005 M10.01 17h.005", "meat": "M13.62 8.382l1.966 -1.967a2 2 0 1 1 3.414 -1.415a2 2 0 1 1 -1.413 3.414l-1.82 1.821 M5.904 18.596c2.733 2.734 5.9 4 7.07 2.829c1.172 -1.172 -.094 -4.338 -2.828 -7.071c-2.733 -2.734 -5.9 -4 -7.07 -2.829c-1.172 1.172 .094 4.338 2.828 7.071 M7.5 16l1 1 M12.975 21.425c3.905 -3.906 4.855 -9.288 2.121 -12.021c-2.733 -2.734 -8.115 -1.784 -12.02 2.121", "bread": "M18 4a3 3 0 0 1 2 5.235v8.765a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-8.764a3 3 0 0 1 1.824 -5.231h12.176v-.005", "droplet": "M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546", "leaf": "M5 21c.5 -4.5 2.5 -8 7 -10 M9 18c6.218 0 10.5 -3.288 11 -12v-2h-4.014c-9 0 -11.986 4 -12 9c0 1 0 3 2 5h3l.014 0", "eyeoff": "M10.585 10.587a2 2 0 0 0 2.829 2.828 M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87 M3 3l18 18", "refresh": "M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4", "euro": "M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M14.401 8c-.669 -.628 -1.5 -1 -2.401 -1c-2.21 0 -4 2.239 -4 5s1.79 5 4 5c.9 0 1.731 -.372 2.4 -1 M7 10.5h4 M7 13.5h4", "lock": "M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6 M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0 M8 11v-4a4 4 0 1 1 8 0v4", "pencil": "M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4 M13.5 6.5l4 4", "carrot": "M3 21s9.834 -3.489 12.684 -6.34a4.487 4.487 0 0 0 0 -6.344a4.483 4.483 0 0 0 -6.342 0c-2.86 2.861 -6.347 12.689 -6.347 12.689l.005 -.005 M9 13l-1.5 -1.5 M16 14l-2 -2 M22 8s-1.14 -2 -3 -2c-1.406 0 -3 2 -3 2s1.14 2 3 2s3 -2 3 -2 M16 2s-2 1.14 -2 3s2 3 2 3s2 -1.577 2 -3c0 -1.86 -2 -3 -2 -3", "fish": "M16.69 7.44a6.973 6.973 0 0 0 -1.69 4.56c0 1.747 .64 3.345 1.699 4.571 M2 9.504c7.715 8.647 14.75 10.265 20 2.498c-5.25 -7.761 -12.285 -6.142 -20 2.504 M18 11v.01 M11.5 10.5c-.667 1 -.667 2 0 3", "milk": "M8 6h8v-2a1 1 0 0 0 -1 -1h-6a1 1 0 0 0 -1 1v2 M16 6l1.094 1.759a6 6 0 0 1 .906 3.17v8.071a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8.071a6 6 0 0 1 .906 -3.17l1.094 -1.759 M10 16a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M10 10h4", "bowl": "M4 11h16a1 1 0 0 1 1 1v.5c0 1.5 -2.517 5.573 -4 6.5v1a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-1c-1.687 -1.054 -4 -5 -4 -6.5v-.5a1 1 0 0 1 1 -1 M8 7c1.657 0 3 -.895 3 -2s-1.343 -2 -3 -2s-3 .895 -3 2s1.343 2 3 2 M11 5h9", "bottle": "M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2 M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537 M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805", "wheat": "M12.014 21.514v-3.75 M5.93 9.504l-.43 1.604c-.712 2.659 .866 5.391 3.524 6.105c.997 .268 1.993 .535 2.99 .801v-3.44c-.164 -2.105 -1.637 -3.879 -3.676 -4.426l-2.408 -.644 M13.744 11.164c.454 -.454 .815 -.994 1.061 -1.587c.246 -.594 .372 -1.23 .372 -1.873c0 -.643 -.126 -1.279 -.372 -1.872c-.246 -.594 -.606 -1.133 -1.061 -1.588l-1.73 -1.73l-1.73 1.73c-.454 .454 -.815 .994 -1.06 1.588c-.246 .594 -.372 1.23 -.373 1.872c0 .643 .127 1.279 .373 1.873c.246 .594 .606 1.133 1.06 1.587 M18.099 9.504l.43 1.604c.712 2.659 -.866 5.391 -3.525 6.105c-.997 .268 -1.994 .535 -2.99 .801v-3.44c.164 -2.105 1.637 -3.879 3.677 -4.426l2.408 -.644" };
+    this._d = { DIET: DIET, SUBS: SUBS, SHOPPING: SHOPPING, MICROS: MICROS, IC: IC };
+    return this._d;
+  }
+
+  today() { return (new Date().getDay() + 6) % 7; }
+
+  seed() {
+    // stato d'esempio: i pasti di oggi già passati risultano mangiati
+    const D = this.data(), today = this.today(), now = new Date();
+    const hm = ("0" + now.getHours()).slice(-2) + ":" + ("0" + now.getMinutes()).slice(-2);
+    const eaten = {};
+    D.DIET[today].meals.forEach((m, mi) => {
+      if (m[1] <= hm) m.foods.forEach((f, fi) => { eaten[today + "-" + mi + "-" + fi] = true; });
+    });
+    D.DIET.forEach((x, i) => {
+      if (i < today) x.meals.forEach((m, mi) => m.foods.forEach((f, fi) => { eaten[i + "-" + mi + "-" + fi] = true; }));
+    });
+    const checked = {};
+    [].forEach((n) => { checked[n] = true; });
+    return {
+      tab: null, day: today, eaten: eaten, checked: checked,
+      off: [],
+      extra: ["Carta forno"], hide: false, subsOpen: false, offN: "", offK: "", addN: ""
+    };
+  }
+
+  tog(keys) {
+    const e = Object.assign({}, this.state.eaten);
+    const all = keys.every((k) => e[k]);
+    keys.forEach((k) => { if (all) delete e[k]; else e[k] = true; });
+    this.setState({ eaten: e });
+  }
+
+  check(k) {
+    const c = Object.assign({}, this.state.checked);
+    if (c[k]) delete c[k]; else c[k] = true;
+    this.setState({ checked: c });
+  }
+
+  stats(i) {
+    const D = this.data(), d = D.DIET[i], s = this.state;
+    const mac = [0, 0, 0, 0], mic = D.MICROS.map(() => 0);
+    d.meals.forEach((m, mi) => m.foods.forEach((f, fi) => {
+      if (!s.eaten[i + "-" + mi + "-" + fi]) return;
+      f.v.forEach((v, j) => { mac[j] += v; });
+      f.mic.forEach((v, j) => { mic[j] += v; });
+    }));
+    const offK = s.off.filter((x) => x.d === i).reduce((a, x) => a + x.k, 0);
+    mac[0] += offK;
+    return { d: d, mac: mac, mic: mic, offK: offK };
+  }
+
+  renderVals() {
+    const INK = "#17150F", PAPER = "#F0EBE1", MUTED = "#5E584C", TRACK = "#DCD4C3", FLAME = "#E8500A", FLAME_TEXT = "#B33C06", LIME = "#B6F23A", RED = "#FF5A4D";
+    const ORANGE = "#FF6A13", YELLOW = "#FFC72C", BLUE = "#4CC2FF", PINK = "#FF6FB0", VIOLET = "#B79CFF";
+    const D = this.data(), s = this.state, today = this.today(), day = s.day;
+    const pen = this.props.pen ?? "#1F3FA6";
+    const tab = s.tab || this.props.startTab || "diet";
+    const ACT = { gym: "PAL", rest: "RIP", swim: "NUO" };
+    const TYPE = { gym: "Palestra", rest: "Riposo", swim: "Nuoto" };
+    const ACT_BG = { gym: ORANGE, rest: VIOLET, swim: BLUE };
+    const ic = D.IC;
+    const closed = (i) => D.DIET[i].meals.every((m, mi) => m.foods.every((f, fi) => s.eaten[i + "-" + mi + "-" + fi]));
+    const mealIcon = (n) => (/colazione/i.test(n) ? ic.coffee : /spuntino|merenda/i.test(n) ? ic.apple : /^pre-/i.test(n) ? ic.bolt : /serale/i.test(n) ? ic.moon : /libera/i.test(n) ? ic.pizza : ic.kitchen);
+
+    // ——— Dieta
+    const st = this.stats(day), d = st.d, left = d.tot[0] - st.mac[0];
+    const days = D.DIET.map((x, i) => ({
+      name: x.day, letter: "LMMGVSD"[i], icon: ic[x.type], sel: i === day,
+      bg: i === day ? INK : (closed(i) ? LIME : "transparent"), fg: i === day ? PAPER : INK,
+      mark: i === today ? ORANGE : "transparent",
+      pick: () => this.setState({ day: i })
+    }));
+    const macroChips = [["P", YELLOW], ["C", BLUE], ["G", PINK]].map((c, j) => ({ k: c[0], bg: c[1], v: st.mac[j + 1] + " / " + d.tot[j + 1] }));
+    const segs = d.meals.map((m, mi) => {
+      const g = m.foods.reduce((a, f, fi) => a + (s.eaten[day + "-" + mi + "-" + fi] ? f.v[0] : 0), 0);
+      return { grow: m[3], pct: (m[3] ? Math.min(100, g / m[3] * 100) : 0) + "%", col: ORANGE };
+    });
+    if (st.offK) segs.push({ grow: st.offK, pct: "100%", col: pen });
+    const meals = d.meals.map((m, mi) => {
+      const keys = m.foods.map((f, fi) => day + "-" + mi + "-" + fi);
+      const allOn = keys.every((k) => s.eaten[k]);
+      return {
+        name: m[0], time: m[1], kcal: m[3], macro: "P " + m[4] + " · C " + m[5] + " · G " + m[6],
+        allOn: allOn, aria: m[0] + ": spunta tutto", toggleAll: () => this.tog(keys),
+        icon: mealIcon(m[0]), iconBg: allOn ? LIME : "transparent", box: allOn ? LIME : "transparent", meta: m[1] + "  ·  " + m[3] + " kcal",
+        mac: [["P", YELLOW, m[4]], ["C", BLUE, m[5]], ["G", PINK, m[6]]].map((q) => ({ bg: q[1], t: q[0] + " " + q[2] })),
+        foods: m.foods.map((f, fi) => {
+          const on = !!s.eaten[keys[fi]];
+          return { name: f.name, qty: f.qty, kcal: f.v[0], on: on, box: on ? LIME : "transparent", deco: on ? "line-through" : "none", col: on ? MUTED : INK, toggle: () => this.tog([keys[fi]]) };
+        })
+      };
+    });
+    const offItems = s.off.map((x, idx) => ({ x: x, idx: idx })).filter((o) => o.x.d === day).map((o) => ({
+      n: o.x.n, k: o.x.k, aria: "Elimina " + o.x.n,
+      del: () => this.setState({ off: this.state.off.filter((y, j) => j !== o.idx) })
+    }));
+
+    // ——— Oggi
+    const tt = this.stats(today), td = tt.d, tLeft = td.tot[0] - tt.mac[0], over = tLeft < 0;
+    let next = null, mealsDone = 0;
+    const mealDots = td.meals.map((m, mi) => {
+      const n = m.foods.filter((f, fi) => s.eaten[today + "-" + mi + "-" + fi]).length;
+      const done = n === m.foods.length;
+      if (done) mealsDone += 1;
+      if (!done && !next) next = m;
+      return { bg: done ? INK : (n ? "rgba(23, 21, 15, 0.35)" : "transparent") };
+    });
+    let microHit = 0, microGoals = 0;
+    const micros = D.MICROS.map((r, j) => {
+      const got = tt.mic[j], v = r[1] === "µg" ? Math.round(got * 10) / 10 : Math.round(got);
+      const isOver = !!r[3] && got > r[2], hit = !r[3] && got >= r[2];
+      if (!r[3]) { microGoals += 1; if (hit) microHit += 1; }
+      return {
+        name: r[0], maxTag: r[3] ? "max" : "", val: v.toLocaleString("it-IT"), target: r[2].toLocaleString("it-IT") + " " + r[1],
+        now: v, max: r[2], pct: Math.min(100, got / r[2] * 100) + "%", hit: hit,
+        bar: isOver ? RED : (hit ? LIME : YELLOW), col: isOver ? FLAME_TEXT : INK, overTag: isOver ? " · oltre" : (hit ? " · centrato" : "")
+      };
+    });
+    const weekClosed = D.DIET.map((x, i) => closed(i));
+    const nClosed = weekClosed.filter((c) => c).length;
+    let streak = 0;
+    for (let k = weekClosed[today] ? today : today - 1; k >= 0 && weekClosed[k]; k -= 1) streak += 1;
+    const MAC = [["Proteine", YELLOW, ic.meat], ["Carbo", BLUE, ic.bread], ["Grassi", PINK, ic.droplet]];
+    const tiles = MAC.map((c, j) => {
+      const got = tt.mac[j + 1], tot = td.tot[j + 1], miss = tot - got;
+      return {
+        label: c[0], bg: c[1], icon: c[2], big: got, of: "/ " + tot + " g", hasBar: true, hasDots: false, dots: [],
+        now: got, max: tot, pct: Math.min(100, got / tot * 100) + "%", done: got >= tot,
+        sub: miss > 0 ? "mancano " + miss + " g" : (miss < 0 ? "oltre di " + (-miss) + " g" : "centrato al grammo")
+      };
+    }).concat([
+      { label: "Pasti", icon: ic.kitchen, bg: ORANGE, big: mealsDone, of: "/ " + td.meals.length, hasBar: false, hasDots: true, dots: mealDots,
+        now: 0, max: 0, pct: "0%", done: mealsDone === td.meals.length, sub: next ? "prossimo alle " + next[1] : "tutti spuntati" },
+      { label: "Micro", icon: ic.leaf, bg: LIME, big: microHit, of: "/ " + microGoals, hasBar: false, hasDots: true,
+        dots: micros.filter((r) => !r.maxTag).map((r) => ({ bg: r.hit ? INK : "transparent" })),
+        now: 0, max: 0, pct: "0%", done: microHit === microGoals, sub: microHit === microGoals ? "tutti centrati" : "obiettivi centrati" },
+      { label: "Settimana", icon: ic.week, bg: VIOLET, big: nClosed, of: "/ 7", hasBar: false, hasDots: true,
+        dots: weekClosed.map((c, i) => ({ bg: c ? INK : (i === today ? "rgba(23, 21, 15, 0.35)" : "transparent") })),
+        now: 0, max: 0, pct: "0%", done: nClosed === 7, sub: streak > 1 ? "serie di " + streak + " giorni" : (streak === 1 ? "1 giorno chiuso di fila" : "giorni chiusi") }
+    ]);
+    const ratio = tt.mac[0] / td.tot[0], scorePct = Math.min(100, Math.floor(ratio * 100));
+    const LV = [[1, "A DIGIUNO"], [25, "RISCALDAMENTO"], [50, "IN SPINTA"], [75, "IN FIAMME"], [100, "QUASI SGRAVATO"]];
+    const li = LV.findIndex((l) => scorePct < l[0]);
+    const level = over ? "FUORI GIRI" : (li < 0 ? "SGRAVATO" : LV[li][1]);
+    const levelHint1 = over ? "+" + (-tLeft) + " kcal" : (li < 0 ? "piano chiuso" : "ancora " + Math.max(1, Math.ceil(LV[li][0] / 100 * td.tot[0]) - tt.mac[0]) + " kcal");
+    const levelHint2 = over ? "sul piano di oggi" : (li < 0 ? "ci vediamo domani" : "per " + (li === 4 ? "SGRAVATO" : LV[li + 1][1]));
+
+    // ——— Spesa
+    let nAll = 0, nDone = 0, euro = 0;
+    const DEPT = [[ic.carrot, LIME], [ic.fish, BLUE], [ic.milk, YELLOW], [ic.bread, ORANGE], [ic.bowl, PINK], [ic.bottle, VIOLET]];
+    const groups = D.SHOPPING.map((g, gi) => {
+      const all = g[1].map((i) => ({ n: i[0], q: i[1], c: i[2], on: !!s.checked[i[0]] }));
+      all.forEach((i) => { nAll += 1; if (i.on) nDone += 1; else euro += i.c; });
+      const vis = all.filter((i) => !(s.hide && i.on)).sort((a, b) => a.on - b.on);
+      return {
+        name: g[0], count: all.filter((i) => i.on).length + "/" + all.length, n: vis.length,
+        icon: DEPT[gi % 6][0], bg: DEPT[gi % 6][1], countBg: all.every((i) => i.on) ? LIME : "transparent",
+        items: vis.map((i) => ({ n: i.n, q: i.q, on: i.on, box: i.on ? LIME : "transparent", deco: i.on ? "line-through" : "none", col: i.on ? MUTED : INK, toggle: () => this.check(i.n) }))
+      };
+    }).filter((g) => g.n > 0);
+    const exAll = s.extra.map((n) => ({ n: n, on: !!s.checked["x:" + n] }));
+    exAll.forEach((x) => { nAll += 1; if (x.on) nDone += 1; });
+    const extras = exAll.filter((x) => !(s.hide && x.on)).map((x) => ({
+      n: x.n, on: x.on, box: x.on ? LIME : "transparent", deco: x.on ? "line-through" : "none", aria: "Elimina " + x.n,
+      toggle: () => this.check("x:" + x.n),
+      del: () => {
+        const c = Object.assign({}, this.state.checked); delete c["x:" + x.n];
+        this.setState({ extra: this.state.extra.filter((y) => y !== x.n), checked: c });
+      }
+    }));
+
+    const tabs = [
+      ["diet", "DIETA", D.DIET[today].day, ic.kitchen],
+      ["stats", "OGGI", over ? ("oltre di " + (-tLeft)) : ("mancano " + tLeft), ic.flame],
+      ["shop", "SPESA", nDone + "/" + nAll + " presi", ic.cart]
+    ].map((t, i) => ({
+      label: t[1], sub: t[2], icon: t[3], on: tab === t[0],
+      bg: tab === t[0] ? INK : "transparent", fg: tab === t[0] ? PAPER : INK, subfg: tab === t[0] ? "#D8D0BF" : MUTED,
+      bl: i ? "1.5px solid " + INK : "0", go: () => this.setState({ tab: t[0] })
+    }));
+
+    return {
+      pen: pen, ic: ic, tabs: tabs, macroChips: macroChips, actIcon: ic[d.type], actBg: ACT_BG[d.type],
+      subsIcon: s.subsOpen ? ic.up : ic.down, todayIcon: ic[td.type], todayBg: ACT_BG[td.type],
+      hideBox: s.hide ? LIME : "transparent", extraCountBg: exAll.length && exAll.every((x) => x.on) ? LIME : "transparent", isDiet: tab === "diet", isStats: tab === "stats", isShop: tab === "shop",
+
+      days: days, got: st.mac[0], tot: d.tot[0], segs: segs,
+      leftLabel: left >= 0 ? "mancano " + left : "oltre di " + (-left), leftCol: left >= 0 ? INK : FLAME_TEXT,
+      barLabel: st.mac[0] + " di " + d.tot[0] + " kcal, un segmento per pasto",
+      macroLine: "P " + st.mac[1] + "/" + d.tot[1] + "  ·  C " + st.mac[2] + "/" + d.tot[2] + "  ·  G " + st.mac[3] + "/" + d.tot[3],
+      dayName: d.day, isToday: day === today, activity: d.activity, hasNote: !!d.note, note: d.note || "",
+      meals: meals, offItems: offItems, offTotal: st.offK,
+      offN: s.offN, offK: s.offK,
+      setOffN: (e) => this.setState({ offN: e.target.value }),
+      setOffK: (e) => this.setState({ offK: e.target.value.replace(/[^\d]/g, "") }),
+      addOff: (e) => {
+        e.preventDefault();
+        const n = this.state.offN.trim(), k = Math.round(+this.state.offK);
+        if (!n || !(k > 0 && k <= 5000)) return;
+        this.setState({ off: this.state.off.concat([{ d: this.state.day, n: n, k: k }]), offN: "", offK: "" });
+      },
+      subs: D.SUBS.map((u) => ({ g: u[0], r: u[1], e: u[2] })), subsOpen: s.subsOpen, subsLabel: s.subsOpen ? "CHIUDI" : "APRI",
+      toggleSubs: () => this.setState({ subsOpen: !this.state.subsOpen }),
+
+      todayName: td.day, todayActivity: TYPE[td.type],
+      heroNum: Math.abs(tLeft), heroCol: over ? RED : ORANGE, heroNumCol: over ? FLAME_TEXT : INK,
+      heroCap1: over ? "kcal oltre" : "kcal ancora", heroCap2: over ? "il piano" : "da mangiare",
+      eatenLine: tt.mac[0] + " mangiate di " + td.tot[0],
+      scorePct: scorePct, ringDash: (Math.min(1, ratio) * 464.96).toFixed(1) + " 464.96",
+      ringLabel: tt.mac[0] + " di " + td.tot[0] + " kcal, " + scorePct + " per cento del piano",
+      level: level, levelHint1: levelHint1, levelHint2: levelHint2,
+      nextTag: next ? "PROSSIMO" : "FATTO", nextName: next ? next[0] : "Tutti i pasti di oggi sono spuntati.",
+      nextMeta: next ? next[1] + " · " + next[3] + " kcal" : "",
+      tiles: tiles, micros: micros,
+
+      groups: groups, extras: extras, hasExtras: extras.length > 0, extraCount: exAll.filter((x) => x.on).length + "/" + exAll.length,
+      shopDone: nDone, shopAll: nAll, shopPct: (nAll ? nDone / nAll * 100 : 0) + "%",
+      shopLeft: euro.toFixed(2).replace(".", ","), shopEmpty: groups.length === 0 && extras.length === 0,
+      hide: s.hide, toggleHide: () => this.setState({ hide: !this.state.hide }),
+      addN: s.addN, setAddN: (e) => this.setState({ addN: e.target.value }),
+      addExtra: (e) => {
+        e.preventDefault();
+        const n = this.state.addN.trim();
+        if (n && this.state.extra.indexOf(n) < 0) this.setState({ extra: this.state.extra.concat([n]), addN: "" });
+        else this.setState({ addN: "" });
+      },
+      resetShop: () => this.setState({ checked: {}, extra: [], hide: false })
+    };
+  }
+}
+</script>
+</body>
+</html>
