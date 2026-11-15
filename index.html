@@ -32,10 +32,13 @@ section[hidden] { display: none; }
 button { font: inherit; color: inherit; }
 
 /* giorni */
-#days {
-  position: sticky; top: env(safe-area-inset-top); z-index: 5; display: flex; gap: 6px;
-  padding: 10px 0; background: var(--bg);
-}
+.sticky { position: sticky; top: env(safe-area-inset-top); z-index: 5; background: var(--bg); padding-bottom: 8px; }
+#days { display: flex; gap: 6px; padding: 10px 0; }
+#count b { font-size: 20px; }
+#count .left { color: var(--muted); font-size: 14px; }
+#count .over { color: #e03131; }
+#count .track { margin: 6px 0 4px; }
+#count p { margin: 0; font-size: 12px; color: var(--muted); }
 #days button {
   flex: 1; height: 42px; border: 0; border-radius: 12px; background: var(--card);
   font-weight: 600; border-bottom: 3px solid var(--c);
@@ -50,9 +53,10 @@ button { font: inherit; color: inherit; }
 .tot { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
 .note { background: var(--card); border-left: 3px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 0 0 12px; }
 
-.meal { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
-.mh { display: flex; justify-content: space-between; align-items: baseline; }
-.mh h2 { margin: 0; font-size: 17px; }
+.meal { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; user-select: none; }
+.meal.done ul, .meal.done .mm, .meal.done h2 { opacity: .5; }
+.mh { display: flex; align-items: center; gap: 10px; }
+.mh h2 { margin: 0; font-size: 17px; flex: 1; }
 .mh time { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
 .meal ul { margin: 6px 0; padding-left: 18px; }
 .meal li { margin: 2px 0; }
@@ -70,7 +74,7 @@ summary { font-weight: 600; cursor: pointer; }
 #prog { font-weight: 700; font-size: 20px; }
 #left { color: var(--muted); font-size: 14px; }
 .track { height: 6px; background: var(--line); border-radius: 3px; margin: 8px 0; overflow: hidden; }
-#bar { height: 100%; background: var(--done); transition: width .2s; }
+.track > div { height: 100%; background: var(--done); transition: width .2s; }
 .tools label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 #reset { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 6px 0; }
 #add { display: flex; gap: 8px; margin: 8px 0 0; }
@@ -121,7 +125,7 @@ nav button.on { color: var(--accent); font-weight: 600; }
 </div>
 <main>
   <section id="diet">
-    <div id="days"></div>
+    <div class="sticky"><div id="days"></div><div id="count"></div></div>
     <div id="diet-body"></div>
   </section>
 
@@ -155,6 +159,19 @@ const TYPES = { gym: ["Palestra", "#2f6db3"], rest: ["Riposo", "#7a8896"], swim:
 const todayIdx = () => (new Date().getDay() + 6) % 7; // getDay: Dom=0 → Lun=0…Dom=6
 let today = todayIdx(), day = today;
 let checked = new Set(load("checked", [])), extra = load("extra", []), hide = load("hide", false);
+let eaten = load("eaten", {}); // { "2026-11-15": [indici pasti spuntati] }
+const iso = off => { const d = new Date(); d.setDate(d.getDate() + off); return d.toLocaleDateString("sv-SE"); };
+const dayKey = () => iso(day - today); // settimana Lun-Dom corrente
+const num = n => n.toLocaleString("it-IT");
+
+function toggleMeal(i) {
+  const k = dayKey(), s = new Set(eaten[k] || []);
+  s.has(i) ? s.delete(i) : s.add(i);
+  eaten[k] = [...s];
+  const min = iso(-7);
+  for (const x in eaten) if (x < min) delete eaten[x]; // tieni solo l'ultima settimana
+  save("eaten", eaten); renderDiet();
+}
 
 const macros = (k, p, c, g) => `${k} kcal · P ${p} · C ${c} · G ${g}`;
 const bold = f => esc(f).replace(/(\d[\d,.]*\s?(g|ml))$/, "<b>$1</b>");
@@ -163,13 +180,24 @@ function renderDiet() {
   const d = DIET[day], [label, color] = TYPES[d.type];
   $("#days").innerHTML = DIET.map((x, i) =>
     `<button class="${i === day ? "on" : ""} ${i === today ? "today" : ""}" data-d="${i}" style="--c:${TYPES[x.type][1]}" aria-label="${x.day}">${"LMMGVSD"[i]}</button>`).join("");
+  const done = eaten[dayKey()] || [];
+  const got = [3, 4, 5, 6].map(j => done.reduce((s, i) => s + (d.meals[i]?.[j] || 0), 0));
+  const left = d.tot[0] - got[0];
+  $("#count").innerHTML =
+    `<div class="row"><span><b>${num(got[0])}</b> / ${num(d.tot[0])} kcal</span>
+       <span class="left ${left < 0 ? "over" : ""}">${left >= 0 ? `mancano ${num(left)}` : `oltre di ${num(-left)}`}</span></div>
+     <div class="track"><div style="width:${Math.min(100, got[0] / d.tot[0] * 100)}%"></div></div>
+     <p>P ${got[1]}/${d.tot[1]} · C ${got[2]}/${d.tot[2]} · G ${got[3]}/${d.tot[3]}</p>`;
   $("#diet-body").innerHTML =
     `<header class="dayhead" style="--c:${color}"><h1>${d.day}${day === today ? " <small>oggi</small>" : ""}</h1>
-       <span class="badge">${label}</span> ${esc(d.activity)}<p class="tot">${macros(...d.tot)}</p></header>` +
+       <span class="badge">${label}</span> ${esc(d.activity)}</header>` +
     (d.note ? `<p class="note">${esc(d.note)}</p>` : "") +
-    d.meals.map(([n, t, items, ...m]) =>
-      `<article class="meal"><div class="mh"><h2>${n}</h2><time>${t}</time></div>
-       <ul>${items.map(f => `<li>${bold(f)}</li>`).join("")}</ul><p class="mm">${macros(...m)}</p></article>`).join("") +
+    d.meals.map(([n, t, items, ...m], i) => {
+      const on = done.includes(i);
+      return `<article class="meal ${on ? "done" : ""}" data-m="${i}" role="checkbox" aria-checked="${on}" tabindex="0">
+       <div class="mh"><span class="box"></span><h2>${n}</h2><time>${t}</time></div>
+       <ul>${items.map(f => `<li>${bold(f)}</li>`).join("")}</ul><p class="mm">${macros(...m)}</p></article>`;
+    }).join("") +
     `<details><summary>Sostituzioni equivalenti</summary>${SUBS.map(([g, r, e]) =>
       `<div class="sub"><b>${g}</b> — ${r}<br><span>${e}</span></div>`).join("")}</details>`;
 }
@@ -207,6 +235,12 @@ function showTab(t) {
 
 $("nav").onclick = e => { const b = e.target.closest("[data-tab]"); if (b) { showTab(b.dataset.tab); scrollTo(0, 0); } };
 $("#days").onclick = e => { const b = e.target.closest("[data-d]"); if (b) { day = +b.dataset.d; renderDiet(); scrollTo(0, 0); } };
+
+$("#diet-body").onclick = e => { const m = e.target.closest("[data-m]"); if (m) toggleMeal(+m.dataset.m); };
+$("#diet-body").onkeydown = e => {
+  const m = e.target.closest("[data-m]");
+  if (m && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggleMeal(+m.dataset.m); }
+};
 
 function toggle(li) {
   const k = li.dataset.k;
