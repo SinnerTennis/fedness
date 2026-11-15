@@ -262,6 +262,7 @@ function start(code) {
   renderDiet(); renderShop(); showTab(load("tab", "diet"));
 }
 async function boot() {
+  if (!crypto.subtle) { $("#lock-err").textContent = "Serve HTTPS (o localhost) per sbloccare."; return; }
   let enc;
   try { enc = await (await fetch("data.enc.json")).json(); }
   catch { $("#lock-err").textContent = "Impossibile caricare i dati. Sei offline al primo avvio?"; return; }
