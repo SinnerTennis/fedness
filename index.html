@@ -208,7 +208,7 @@ details[open] .ch-d, details:not([open]) .ch-u { display: none; }
 #lock[hidden] { display: none; }
 #lock form { min-height: 100%; max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;
   padding: calc(24px + env(safe-area-inset-top)) 28px calc(28px + env(safe-area-inset-bottom)); }
-#lock .logo { width: 85%; max-width: 332px; height: auto; border: 2px solid var(--ink); border-radius: 6px; transform: rotate(-3deg); margin-top: 8px; }
+#lock .logo { width: 85%; max-width: 332px; height: auto; transform: rotate(-3deg); margin-top: 8px; } /* logo scontornato: niente cornice */
 #lock .motto { margin: 22px 0 0; font: 800 34px/1 var(--font-display); text-transform: uppercase; text-align: center; }
 #lock .fld { flex: none; width: 100%; margin-top: auto; padding-top: 24px; }
 #lock .fld input { height: 48px; font: 600 22px var(--font-body); letter-spacing: .2em; color: var(--pen); }
@@ -231,7 +231,7 @@ nav .on .ns { color: #D8D0BF; }
 <body>
 <div id="lock">
   <form>
-    <img class="logo" src="icon-512.png" alt="Fedness" width="332" height="332">
+    <img class="logo" src="logo.png" alt="Fedness" width="332" height="332">
     <p class="motto">Diventa una fottuta<br>statua marmorea!</p>
     <input type="text" name="username" value="fedness" autocomplete="username" hidden>
     <label class="fld"><span>PASSWORD</span>
