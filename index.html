@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fedness">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Fedness</title>
+<style>
+:root {
+  --bg: #f4f5f7; --card: #fff; --text: #1d2228; --muted: #6b7480; --line: #e3e6ea;
+  --accent: #e8590c; --done: #2f9e44;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #111214; --card: #1c1e22; --text: #eceef1; --muted: #98a1ac; --line: #2c2f35; }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: env(safe-area-inset-top) 0 calc(70px + env(safe-area-inset-bottom));
+}
+main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+section[hidden] { display: none; }
+button { font: inherit; color: inherit; }
+
+/* giorni */
+#days {
+  position: sticky; top: env(safe-area-inset-top); z-index: 5; display: flex; gap: 6px;
+  padding: 10px 0; background: var(--bg);
+}
+#days button {
+  flex: 1; height: 42px; border: 0; border-radius: 12px; background: var(--card);
+  font-weight: 600; border-bottom: 3px solid var(--c);
+}
+#days button.today { outline: 2px solid var(--accent); outline-offset: -2px; }
+#days button.on { background: var(--c); color: #fff; }
+
+.dayhead { padding: 6px 2px 10px; }
+.dayhead h1 { margin: 0 0 4px; font-size: 28px; }
+.dayhead small { font-size: 14px; color: var(--accent); font-weight: 600; vertical-align: middle; }
+.badge { display: inline-block; background: var(--c); color: #fff; border-radius: 6px; padding: 1px 8px; font-size: 13px; font-weight: 600; }
+.tot { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+.note { background: var(--card); border-left: 3px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 0 0 12px; }
+
+.meal { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+.mh { display: flex; justify-content: space-between; align-items: baseline; }
+.mh h2 { margin: 0; font-size: 17px; }
+.mh time { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.meal ul { margin: 6px 0; padding-left: 18px; }
+.meal li { margin: 2px 0; }
+.mm { margin: 0; font-size: 12px; color: var(--muted); }
+
+details { background: var(--card); border-radius: 14px; padding: 12px 14px; margin: 16px 0; }
+summary { font-weight: 600; cursor: pointer; }
+.sub { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.sub:first-of-type { margin-top: 8px; }
+.sub span { color: var(--muted); }
+
+/* spesa */
+.shophead { position: sticky; top: env(safe-area-inset-top); z-index: 5; background: var(--bg); padding: 12px 0 8px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#prog { font-weight: 700; font-size: 20px; }
+#left { color: var(--muted); font-size: 14px; }
+.track { height: 6px; background: var(--line); border-radius: 3px; margin: 8px 0; overflow: hidden; }
+#bar { height: 100%; background: var(--done); transition: width .2s; }
+.tools label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+#reset { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 6px 0; }
+#add { display: flex; gap: 8px; margin: 8px 0 0; }
+#add input { flex: 1; min-width: 0; font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+#add button { border: 0; border-radius: 10px; background: var(--accent); color: #fff; width: 44px; font-size: 22px; }
+
+#list h3 { margin: 16px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+#list ul { list-style: none; margin: 0; padding: 0; background: var(--card); border-radius: 14px; overflow: hidden; }
+.item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 48px; border-top: 1px solid var(--line); cursor: pointer; user-select: none; }
+.item:first-child { border-top: 0; }
+.box { flex: none; width: 22px; height: 22px; border: 2px solid var(--muted); border-radius: 50%; }
+.n { flex: 1; }
+.q { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.done .box { background: var(--done); border-color: var(--done); box-shadow: inset 0 0 0 3px var(--card); }
+.done .n, .done .q { text-decoration: line-through; color: var(--muted); }
+.del { border: 0; background: none; color: var(--muted); padding: 4px 6px; }
+.empty { text-align: center; color: var(--muted); padding: 40px 0; }
+
+/* sblocco */
+#lock { position: fixed; inset: 0; z-index: 20; background: var(--bg); display: grid; place-items: center; padding: 16px; }
+#lock[hidden] { display: none; }
+#lock form { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 320px; }
+#lock img { border-radius: 26px; }
+#lock input { width: 100%; font: inherit; font-size: 17px; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+#lock button { width: 100%; border: 0; border-radius: 12px; background: var(--accent); color: #fff; font-weight: 600; padding: 12px; }
+#lock button:disabled { opacity: .6; }
+#lock-err { color: #e03131; min-height: 1.4em; margin: 0; font-size: 14px; }
+
+/* tab bar */
+nav {
+  position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
+  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 10;
+}
+nav button { flex: 1; border: 0; background: none; padding: 10px 0 8px; font-size: 12px; color: var(--muted); }
+nav button span { display: block; font-size: 22px; line-height: 1.1; }
+nav button.on { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="lock">
+  <form>
+    <img src="icon-180.png" alt="" width="120" height="120">
+    <input type="text" name="username" value="fedness" autocomplete="username" hidden>
+    <input type="password" id="pw" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
+    <button>Entra</button>
+    <p id="lock-err" role="alert"></p>
+  </form>
+</div>
+<main>
+  <section id="diet">
+    <div id="days"></div>
+    <div id="diet-body"></div>
+  </section>
+
+  <section id="shop" hidden>
+    <div class="shophead">
+      <div class="row"><span id="prog"></span><span id="left"></span></div>
+      <div class="track"><div id="bar"></div></div>
+      <div class="row tools">
+        <label><input type="checkbox" id="hide"> Nascondi presi</label>
+        <button id="reset">Nuova spesa</button>
+      </div>
+      <form id="add"><input placeholder="Aggiungi prodotto…" aria-label="Aggiungi prodotto" enterkeyhint="done"><button aria-label="Aggiungi">+</button></form>
+    </div>
+    <div id="list"></div>
+  </section>
+</main>
+
+<nav>
+  <button data-tab="diet"><span>🍽️</span>Dieta</button>
+  <button data-tab="shop"><span>🛒</span>Spesa</button>
+</nav>
+
+<script>
+let DIET, SUBS, SHOPPING; // arrivano da data.enc.json dopo la password
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem("fedness." + k)) ?? d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem("fedness." + k, JSON.stringify(v)); } catch {} };
+
+const TYPES = { gym: ["Palestra", "#2f6db3"], rest: ["Riposo", "#7a8896"], swim: ["Nuoto", "#1a9a8a"] };
+const todayIdx = () => (new Date().getDay() + 6) % 7; // getDay: Dom=0 → Lun=0…Dom=6
+let today = todayIdx(), day = today;
+let checked = new Set(load("checked", [])), extra = load("extra", []), hide = load("hide", false);
+
+const macros = (k, p, c, g) => `${k} kcal · P ${p} · C ${c} · G ${g}`;
+const bold = f => esc(f).replace(/(\d[\d,.]*\s?(g|ml))$/, "<b>$1</b>");
+
+function renderDiet() {
+  const d = DIET[day], [label, color] = TYPES[d.type];
+  $("#days").innerHTML = DIET.map((x, i) =>
+    `<button class="${i === day ? "on" : ""} ${i === today ? "today" : ""}" data-d="${i}" style="--c:${TYPES[x.type][1]}" aria-label="${x.day}">${"LMMGVSD"[i]}</button>`).join("");
+  $("#diet-body").innerHTML =
+    `<header class="dayhead" style="--c:${color}"><h1>${d.day}${day === today ? " <small>oggi</small>" : ""}</h1>
+       <span class="badge">${label}</span> ${esc(d.activity)}<p class="tot">${macros(...d.tot)}</p></header>` +
+    (d.note ? `<p class="note">${esc(d.note)}</p>` : "") +
+    d.meals.map(([n, t, items, ...m]) =>
+      `<article class="meal"><div class="mh"><h2>${n}</h2><time>${t}</time></div>
+       <ul>${items.map(f => `<li>${bold(f)}</li>`).join("")}</ul><p class="mm">${macros(...m)}</p></article>`).join("") +
+    `<details><summary>Sostituzioni equivalenti</summary>${SUBS.map(([g, r, e]) =>
+      `<div class="sub"><b>${g}</b> — ${r}<br><span>${e}</span></div>`).join("")}</details>`;
+}
+
+function renderShop() {
+  const groups = [
+    ...SHOPPING.map(([g, items]) => [g, items.map(([n, q, c]) => ({ k: n, n, q, c }))]),
+    ["Extra", extra.map(n => ({ k: "x:" + n, n, x: true }))],
+  ];
+  const all = groups.flatMap(g => g[1]);
+  const done = all.filter(i => checked.has(i.k)).length;
+  const left = all.reduce((s, i) => s + (checked.has(i.k) ? 0 : i.c || 0), 0);
+  $("#prog").textContent = `${done}/${all.length} presi`;
+  $("#left").textContent = `restano ~${left.toFixed(2).replace(".", ",")} €`;
+  $("#bar").style.width = (all.length ? done / all.length * 100 : 0) + "%";
+  $("#hide").checked = hide;
+  $("#list").innerHTML = groups.map(([g, items]) => {
+    items = items.filter(i => !(hide && checked.has(i.k))).sort((a, b) => checked.has(a.k) - checked.has(b.k));
+    return items.length ? `<h3>${g}</h3><ul>${items.map(i => {
+      const on = checked.has(i.k);
+      return `<li class="item ${on ? "done" : ""}" data-k="${esc(i.k)}" role="checkbox" aria-checked="${on}" tabindex="0">
+        <span class="box"></span><span class="n">${esc(i.n)}</span>${i.q ? `<span class="q">${i.q}</span>` : ""}
+        ${i.x ? `<button class="del" data-del="${esc(i.n)}" aria-label="Elimina ${esc(i.n)}">✕</button>` : ""}</li>`;
+    }).join("")}</ul>` : "";
+  }).join("") || `<p class="empty">Tutto preso 🎉</p>`;
+}
+
+const persist = () => { save("checked", [...checked]); save("extra", extra); save("hide", hide); };
+
+function showTab(t) {
+  for (const s of ["diet", "shop"]) $("#" + s).hidden = s !== t;
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  save("tab", t);
+}
+
+$("nav").onclick = e => { const b = e.target.closest("[data-tab]"); if (b) { showTab(b.dataset.tab); scrollTo(0, 0); } };
+$("#days").onclick = e => { const b = e.target.closest("[data-d]"); if (b) { day = +b.dataset.d; renderDiet(); scrollTo(0, 0); } };
+
+function toggle(li) {
+  const k = li.dataset.k;
+  checked.has(k) ? checked.delete(k) : checked.add(k);
+  persist(); renderShop();
+}
+$("#list").onclick = e => {
+  const del = e.target.closest("[data-del]");
+  if (del) {
+    const n = del.dataset.del;
+    extra = extra.filter(x => x !== n); checked.delete("x:" + n);
+    persist(); return renderShop();
+  }
+  const li = e.target.closest("[data-k]");
+  if (li) toggle(li);
+};
+$("#list").onkeydown = e => {
+  const li = e.target.closest("[data-k]");
+  if (li && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggle(li); }
+};
+$("#hide").onchange = e => { hide = e.target.checked; persist(); renderShop(); };
+$("#add").onsubmit = e => {
+  e.preventDefault();
+  const inp = e.target.querySelector("input"), n = inp.value.trim();
+  if (n && !extra.includes(n)) { extra.push(n); persist(); renderShop(); }
+  inp.value = "";
+};
+$("#reset").onclick = () => {
+  if (!confirm("Nuova spesa: azzero spunte ed extra?")) return;
+  checked.clear(); extra = []; persist(); renderShop();
+};
+
+// app lasciata aperta in background dalla home: al rientro salta al nuovo giorno
+document.addEventListener("visibilitychange", () => {
+  if (!DIET || document.hidden || todayIdx() === today) return;
+  day = today = todayIdx(); renderDiet();
+});
+
+// --- sblocco: password → PBKDF2 → AES-GCM. Chiave derivata salvata sul telefono, password chiesta una volta sola.
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const b64enc = b => btoa(String.fromCharCode(...new Uint8Array(b)));
+async function decrypt(key, enc) {
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(enc.iv) }, key, b64(enc.ct)));
+}
+async function deriveKey(pw, enc) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(enc.salt), iterations: enc.it, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, true, ["decrypt"]);
+}
+function start(code) {
+  ({ DIET, SUBS, SHOPPING } = new Function(code + ";return {DIET,SUBS,SHOPPING}")());
+  $("#lock").hidden = true;
+  renderDiet(); renderShop(); showTab(load("tab", "diet"));
+}
+async function boot() {
+  let enc;
+  try { enc = await (await fetch("data.enc.json")).json(); }
+  catch { $("#lock-err").textContent = "Impossibile caricare i dati. Sei offline al primo avvio?"; return; }
+  const saved = load("key", null);
+  if (saved) try {
+    return start(await decrypt(await crypto.subtle.importKey("raw", b64(saved), "AES-GCM", true, ["decrypt"]), enc));
+  } catch { save("key", null); } // dati ricifrati con nuova password → richiedila
+  $("#lock form").onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector("button"), pw = $("#pw").value;
+    btn.disabled = true; $("#lock-err").textContent = "";
+    try {
+      const key = await deriveKey(pw, enc), code = await decrypt(key, enc);
+      save("key", b64enc(await crypto.subtle.exportKey("raw", key)));
+      start(code);
+    } catch { $("#lock-err").textContent = "Password errata"; }
+    btn.disabled = false;
+  };
+}
+
+boot();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
