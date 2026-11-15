@@ -17,9 +17,11 @@
 :root {
   --bg: #f4f5f7; --card: #fff; --text: #1d2228; --muted: #6b7480; --line: #e3e6ea;
   --accent: #e8590c; --done: #2f9e44;
+  --meter: #1c7ed6; --over: #e03131; /* coppia validata CVD (dataviz validator) */
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #111214; --card: #1c1e22; --text: #eceef1; --muted: #98a1ac; --line: #2c2f35; }
+  :root { --bg: #111214; --card: #1c1e22; --text: #eceef1; --muted: #98a1ac; --line: #2c2f35;
+    --meter: #339af0; --over: #f03e3e; }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
@@ -53,13 +55,15 @@ button { font: inherit; color: inherit; }
 .tot { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
 .note { background: var(--card); border-left: 3px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 0 0 12px; }
 
-.meal { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; user-select: none; }
-.meal.done ul, .meal.done .mm, .meal.done h2 { opacity: .5; }
+.meal { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+[data-eat] { cursor: pointer; user-select: none; }
+.meal.done h2, .meal.done .mm { opacity: .5; }
 .mh { display: flex; align-items: center; gap: 10px; }
 .mh h2 { margin: 0; font-size: 17px; flex: 1; }
 .mh time { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
-.meal ul { margin: 6px 0; padding-left: 18px; }
-.meal li { margin: 2px 0; }
+.meal ul { list-style: none; margin: 6px 0; padding: 0; }
+.meal li { display: flex; align-items: center; gap: 10px; padding: 8px 0 8px 2px; border-top: 1px solid var(--line); }
+.meal li .box { width: 18px; height: 18px; }
 .mm { margin: 0; font-size: 12px; color: var(--muted); }
 
 details { background: var(--card); border-radius: 14px; padding: 12px 14px; margin: 16px 0; }
@@ -77,9 +81,10 @@ summary { font-weight: 600; cursor: pointer; }
 .track > div { height: 100%; background: var(--done); transition: width .2s; }
 .tools label { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 #reset { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 6px 0; }
-#add { display: flex; gap: 8px; margin: 8px 0 0; }
-#add input { flex: 1; min-width: 0; font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
-#add button { border: 0; border-radius: 10px; background: var(--accent); color: #fff; width: 44px; font-size: 22px; }
+#add, #offadd { display: flex; gap: 8px; margin: 8px 0 0; }
+#offadd input[name=k] { flex: 0 0 80px; }
+#add input, #offadd input { flex: 1; min-width: 0; font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+#add button, #offadd button { border: 0; border-radius: 10px; background: var(--accent); color: #fff; width: 44px; font-size: 22px; }
 
 #list h3 { margin: 16px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 #list ul { list-style: none; margin: 0; padding: 0; background: var(--card); border-radius: 14px; overflow: hidden; }
@@ -92,6 +97,31 @@ summary { font-weight: 600; cursor: pointer; }
 .done .n, .done .q { text-decoration: line-through; color: var(--muted); }
 .del { border: 0; background: none; color: var(--muted); padding: 4px 6px; }
 .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+
+/* dashboard */
+#stats { padding-top: 10px; }
+.card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+.card h2 { margin: 0 0 4px; font-size: 17px; }
+.hero { display: flex; align-items: center; gap: 20px; }
+.hero p { margin: 0; color: var(--muted); }
+.hero .big { font-size: 28px; color: var(--text); }
+.ring {
+  --p: 0; --c: var(--meter); flex: none; width: 130px; height: 130px; border-radius: 50%; position: relative;
+  background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--line) 0);
+  display: grid; place-content: center; text-align: center;
+}
+.ring.over { --c: var(--over); }
+.ring::before { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: var(--card); }
+.ring > * { position: relative; }
+.ring b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
+.ring span { font-size: 12px; color: var(--muted); }
+.meter { margin: 12px 0; font-size: 14px; }
+.meter b { font-variant-numeric: tabular-nums; }
+.meter small { color: var(--muted); }
+.meter .track { margin: 5px 0 0; }
+.meter .track > div { background: var(--meter); border-radius: 3px; }
+.meter.over .track > div { background: var(--over); }
+.meter.over .row span:last-child { color: var(--over); font-weight: 600; }
 
 /* sblocco */
 #lock { position: fixed; inset: 0; z-index: 20; background: var(--bg); display: grid; place-items: center; padding: 16px; }
@@ -129,6 +159,8 @@ nav button.on { color: var(--accent); font-weight: 600; }
     <div id="diet-body"></div>
   </section>
 
+  <section id="stats" hidden></section>
+
   <section id="shop" hidden>
     <div class="shophead">
       <div class="row"><span id="prog"></span><span id="left"></span></div>
@@ -145,11 +177,12 @@ nav button.on { color: var(--accent); font-weight: 600; }
 
 <nav>
   <button data-tab="diet"><span>🍽️</span>Dieta</button>
+  <button data-tab="stats"><span>📊</span>Oggi</button>
   <button data-tab="shop"><span>🛒</span>Spesa</button>
 </nav>
 
 <script>
-let DIET, SUBS, SHOPPING; // arrivano da data.enc.json dopo la password
+let DIET, SUBS, SHOPPING, FOODS; // arrivano da data.enc.json dopo la password
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem("fedness." + k)) ?? d; } catch { return d; } };
@@ -159,19 +192,84 @@ const TYPES = { gym: ["Palestra", "#2f6db3"], rest: ["Riposo", "#7a8896"], swim:
 const todayIdx = () => (new Date().getDay() + 6) % 7; // getDay: Dom=0 → Lun=0…Dom=6
 let today = todayIdx(), day = today;
 let checked = new Set(load("checked", [])), extra = load("extra", []), hide = load("hide", false);
-let eaten = load("eaten", {}); // { "2026-11-15": [indici pasti spuntati] }
+let eaten = load("eaten", {}); // { "2026-11-15": ["pasto-alimento", ...] }
 const iso = off => { const d = new Date(); d.setDate(d.getDate() + off); return d.toLocaleDateString("sv-SE"); };
 const dayKey = () => iso(day - today); // settimana Lun-Dom corrente
 const num = n => n.toLocaleString("it-IT");
 
-function toggleMeal(i) {
-  const k = dayKey(), s = new Set(eaten[k] || []);
-  s.has(i) ? s.delete(i) : s.add(i);
-  eaten[k] = [...s];
-  const min = iso(-7);
-  for (const x in eaten) if (x < min) delete eaten[x]; // tieni solo l'ultima settimana
-  save("eaten", eaten); renderDiet();
+// Ripartisce kcal/P/C/G di ogni pasto (valori PDF) tra gli alimenti, in proporzione a FOODS × grammi.
+// Arrotondamento cumulativo → la somma degli alimenti è esattamente il totale del pasto.
+function splitMeals() {
+  const roundKeepSum = a => { let acc = 0, prev = 0; return a.map(v => { acc += v; const x = Math.round(acc) - prev; prev += x; return x; }); };
+  // obiettivo = somma dei pasti (il totale giorno del PDF è arrotondato a parte, ±1)
+  for (const d of DIET) d.tot = [3, 4, 5, 6].map(j => d.meals.reduce((s, m) => s + m[j], 0));
+  for (const d of DIET) for (const m of d.meals) {
+    const est = m[2].map(t => {
+      const [, name, g] = t.match(/^(.*?)\s*([\d.]+)\s*(?:g|ml)$/) || [, t, 0];
+      const f = FOODS[name.replace(/\s*\(.*?\)/g, "")];
+      if (!f) console.warn("FOODS: manca", name);
+      return (f || Array(4 + MICROS.length).fill(0)).map(v => v * g / 100);
+    });
+    const cols = [0, 1, 2, 3].map(j => {
+      const tot = est.reduce((s, e) => s + e[j], 0);
+      return roundKeepSum(est.map((e, i) => tot ? e[j] * m[3 + j] / tot : i ? 0 : m[3 + j]));
+    });
+    m.foods = m[2].map((t, i) => ({ t, v: cols.map(c => c[i]), mic: est[i].slice(4) }));
+  }
 }
+
+// [nome, unità, obiettivo giornaliero (LARN, uomo adulto), è un limite massimo?]
+const MICROS = [
+  ["Fibre", "g", 30], ["Sodio", "mg", 2000, true], ["Potassio", "mg", 3900], ["Calcio", "mg", 1000],
+  ["Ferro", "mg", 10], ["Magnesio", "mg", 240], ["Vitamina C", "mg", 105], ["Vitamina D", "µg", 15], ["Vitamina B12", "µg", 2.4],
+];
+
+// Somme del giorno i (0=Lun) per quanto spuntato + fuori piano (solo kcal)
+function dayStats(i) {
+  const d = DIET[i], k = iso(i - today), done = new Set(eaten[k] || []);
+  const mac = [0, 0, 0, 0], mic = MICROS.map(() => 0);
+  d.meals.forEach((m, mi) => m.foods.forEach((f, fi) => {
+    if (!done.has(mi + "-" + fi)) return;
+    f.v.forEach((v, j) => mac[j] += v);
+    f.mic.forEach((v, j) => mic[j] += v);
+  }));
+  mac[0] += (offplan[k] || []).reduce((s, x) => s + x.k, 0); // ponytail: fuori piano solo kcal, aggiungi P/C/G se servono
+  return { d, mac, mic };
+}
+
+function meter(label, got, target, unit, limit) {
+  const over = limit && got > target, v = unit === "µg" ? Math.round(got * 10) / 10 : Math.round(got);
+  return `<div class="meter ${over ? "over" : ""}"><div class="row"><span>${label}${limit ? " <small>(max)</small>" : ""}</span>
+    <span><b>${num(v)}</b> / ${num(target)} ${unit}${over ? " · ⚠ oltre il limite" : ""}</span></div>
+    <div class="track" role="progressbar" aria-label="${label}" aria-valuenow="${v}" aria-valuemax="${target}">
+    <div style="width:${Math.min(100, got / target * 100)}%"></div></div></div>`;
+}
+
+function renderStats() {
+  const { d, mac, mic } = dayStats(today), left = d.tot[0] - mac[0];
+  $("#stats").innerHTML =
+    `<header class="dayhead"><h1>Oggi</h1>${d.day} · ${TYPES[d.type][0]}</header>
+     <div class="card hero">
+       <div class="ring ${left < 0 ? "over" : ""}" style="--p:${Math.min(100, mac[0] / d.tot[0] * 100)}" role="img"
+         aria-label="${mac[0]} di ${d.tot[0]} kcal"><b>${num(mac[0])}</b><span>/ ${num(d.tot[0])} kcal</span></div>
+       <p>${left >= 0 ? `Mancano<br><b class="big">${num(left)}</b> kcal` : `⚠ Oltre di<br><b class="big">${num(-left)}</b> kcal`}</p>
+     </div>
+     <div class="card"><h2>Macro</h2>${["Proteine", "Carboidrati", "Grassi"].map((n, j) => meter(n, mac[j + 1], d.tot[j + 1], "g")).join("")}</div>
+     <div class="card"><h2>Micro</h2>${MICROS.map(([n, u, t, l], j) => meter(n, mic[j], t, u, l)).join("")}
+       <p class="mm">Stime da valori medi per 100 g. Il fuori piano conta solo nelle kcal.</p></div>`;
+}
+
+function toggleEat(keys) {
+  const k = dayKey(), s = new Set(eaten[k] || []);
+  const all = keys.every(x => s.has(x));
+  for (const x of keys) all ? s.delete(x) : s.add(x);
+  eaten[k] = [...s];
+  prune(eaten); save("eaten", eaten); renderDiet();
+}
+
+let offplan = load("offplan", {}); // { "2026-11-15": [{ n: "Caffè e biscotto", k: 120 }] }
+const prune = o => { const min = iso(-7); for (const x in o) if (x < min) delete o[x]; }; // tieni solo l'ultima settimana
+function saveOff() { prune(offplan); save("offplan", offplan); renderDiet(); }
 
 const macros = (k, p, c, g) => `${k} kcal · P ${p} · C ${c} · G ${g}`;
 const bold = f => esc(f).replace(/(\d[\d,.]*\s?(g|ml))$/, "<b>$1</b>");
@@ -180,8 +278,7 @@ function renderDiet() {
   const d = DIET[day], [label, color] = TYPES[d.type];
   $("#days").innerHTML = DIET.map((x, i) =>
     `<button class="${i === day ? "on" : ""} ${i === today ? "today" : ""}" data-d="${i}" style="--c:${TYPES[x.type][1]}" aria-label="${x.day}">${"LMMGVSD"[i]}</button>`).join("");
-  const done = eaten[dayKey()] || [];
-  const got = [3, 4, 5, 6].map(j => done.reduce((s, i) => s + (d.meals[i]?.[j] || 0), 0));
+  const done = new Set(eaten[dayKey()] || []), extras = offplan[dayKey()] || [], got = dayStats(day).mac;
   const left = d.tot[0] - got[0];
   $("#count").innerHTML =
     `<div class="row"><span><b>${num(got[0])}</b> / ${num(d.tot[0])} kcal</span>
@@ -192,14 +289,27 @@ function renderDiet() {
     `<header class="dayhead" style="--c:${color}"><h1>${d.day}${day === today ? " <small>oggi</small>" : ""}</h1>
        <span class="badge">${label}</span> ${esc(d.activity)}</header>` +
     (d.note ? `<p class="note">${esc(d.note)}</p>` : "") +
-    d.meals.map(([n, t, items, ...m], i) => {
-      const on = done.includes(i);
-      return `<article class="meal ${on ? "done" : ""}" data-m="${i}" role="checkbox" aria-checked="${on}" tabindex="0">
-       <div class="mh"><span class="box"></span><h2>${n}</h2><time>${t}</time></div>
-       <ul>${items.map(f => `<li>${bold(f)}</li>`).join("")}</ul><p class="mm">${macros(...m)}</p></article>`;
+    d.meals.map((m, mi) => {
+      const [n, t, , ...mv] = m, keys = m.foods.map((_, fi) => mi + "-" + fi), on = keys.every(k => done.has(k));
+      return `<article class="meal ${on ? "done" : ""}">
+       <div class="mh" data-eat="${keys.join(" ")}" role="checkbox" aria-checked="${on}" tabindex="0" aria-label="${n}: tutto">
+         <span class="box"></span><h2>${n}</h2><time>${t}</time></div>
+       <ul>${m.foods.map((f, fi) => {
+         const k = mi + "-" + fi, o = done.has(k);
+         return `<li class="${o ? "done" : ""}" data-eat="${k}" role="checkbox" aria-checked="${o}" tabindex="0">
+           <span class="box"></span><span class="n">${bold(f.t)}</span><span class="q">${f.v[0]} kcal</span></li>`;
+       }).join("")}</ul><p class="mm">${macros(...mv)}</p></article>`;
     }).join("") +
+    `<article class="meal"><div class="mh"><h2>Fuori piano</h2></div>
+       <ul>${extras.map((x, i) => `<li><span class="n">${esc(x.n)}</span><span class="q">${x.k} kcal</span>
+         <button class="del" data-offdel="${i}" aria-label="Elimina ${esc(x.n)}">✕</button></li>`).join("")}</ul>
+       <form id="offadd">
+         <input name="n" placeholder="Cosa hai mangiato" aria-label="Cosa hai mangiato" required>
+         <input name="k" type="number" inputmode="numeric" min="1" max="5000" placeholder="kcal" aria-label="kcal" required>
+         <button aria-label="Aggiungi">+</button></form></article>` +
     `<details><summary>Sostituzioni equivalenti</summary>${SUBS.map(([g, r, e]) =>
       `<div class="sub"><b>${g}</b> — ${r}<br><span>${e}</span></div>`).join("")}</details>`;
+  renderStats();
 }
 
 function renderShop() {
@@ -228,7 +338,7 @@ function renderShop() {
 const persist = () => { save("checked", [...checked]); save("extra", extra); save("hide", hide); };
 
 function showTab(t) {
-  for (const s of ["diet", "shop"]) $("#" + s).hidden = s !== t;
+  for (const s of ["diet", "stats", "shop"]) $("#" + s).hidden = s !== t;
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   save("tab", t);
 }
@@ -236,10 +346,20 @@ function showTab(t) {
 $("nav").onclick = e => { const b = e.target.closest("[data-tab]"); if (b) { showTab(b.dataset.tab); scrollTo(0, 0); } };
 $("#days").onclick = e => { const b = e.target.closest("[data-d]"); if (b) { day = +b.dataset.d; renderDiet(); scrollTo(0, 0); } };
 
-$("#diet-body").onclick = e => { const m = e.target.closest("[data-m]"); if (m) toggleMeal(+m.dataset.m); };
+$("#diet-body").onclick = e => {
+  const del = e.target.closest("[data-offdel]");
+  if (del) { offplan[dayKey()].splice(+del.dataset.offdel, 1); return saveOff(); }
+  const x = e.target.closest("[data-eat]"); if (x) toggleEat(x.dataset.eat.split(" "));
+};
+$("#diet-body").addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.target, n = f.n.value.trim(), k = Math.round(+f.k.value);
+  if (!n || !(k > 0 && k <= 5000)) return;
+  (offplan[dayKey()] ||= []).push({ n, k }); saveOff();
+});
 $("#diet-body").onkeydown = e => {
-  const m = e.target.closest("[data-m]");
-  if (m && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggleMeal(+m.dataset.m); }
+  const x = e.target.closest("[data-eat]");
+  if (x && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggleEat(x.dataset.eat.split(" ")); }
 };
 
 function toggle(li) {
@@ -291,7 +411,8 @@ async function deriveKey(pw, enc) {
     base, { name: "AES-GCM", length: 256 }, true, ["decrypt"]);
 }
 function start(code) {
-  ({ DIET, SUBS, SHOPPING } = new Function(code + ";return {DIET,SUBS,SHOPPING}")());
+  ({ DIET, SUBS, SHOPPING, FOODS } = new Function(code + ";return {DIET,SUBS,SHOPPING,FOODS}")());
+  splitMeals();
   $("#lock").hidden = true;
   renderDiet(); renderShop(); showTab(load("tab", "diet"));
 }
