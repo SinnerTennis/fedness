@@ -38,7 +38,7 @@ body {
 }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
-button:focus-visible, input:focus-visible, [tabindex]:focus-visible, summary:focus-visible { outline: 3px solid var(--flame-text); outline-offset: 1px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible, summary:focus-visible { outline: 3px solid var(--flame-text); outline-offset: 1px; }
 input::placeholder { color: var(--muted); opacity: 1; }
 input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 input::-webkit-inner-spin-button, input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -87,6 +87,11 @@ section[hidden] { display: none; }
 .fld > span { font: 600 12px var(--font-display); letter-spacing: .1em; color: var(--muted); }
 .fld input { width: 100%; height: 40px; padding: 0 2px; border: 0; border-bottom: 1.5px solid var(--ink); border-radius: 0; background: transparent; font: 600 24px var(--font-hand); color: var(--pen); }
 .fld.kcal { flex: none; width: 70px; }
+.sd { display: block; font: 400 13px/1.3 var(--font-body); color: var(--muted); }
+.more summary { padding: 10px 0 4px; font: 600 12px var(--font-display); letter-spacing: .1em; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.more[open] summary svg { transform: rotate(180deg); }
+.more textarea { width: 100%; margin-top: 4px; padding: 6px; border: 1.5px solid var(--ink); border-radius: 0; background: transparent; font: 400 15px var(--font-body); color: var(--pen); resize: vertical; }
+.fgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; margin-top: 8px; }
 .plus { flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 3px; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; }
 .xbtn { flex: none; width: 44px; height: 44px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; }
 
@@ -180,10 +185,11 @@ details[open] .ch-d, details:not([open]) .ch-u { display: none; }
 .mrow > div + div { padding-left: 10px; }
 .mrow > div:first-child { font-size: 15px; }
 .mrow small { font-size: 12.5px; color: var(--muted); }
-.mbar { flex: 1; height: 12px; border: 1.5px solid var(--ink); }
+.mbar { flex: 1; height: 12px; border: 1.5px solid var(--ink); display: flex; }
 .mbar > div { height: 100%; background: var(--yellow); }
 .mbar.ok > div { background: var(--lime); }
 .mbar.over > div { background: var(--red); }
+.mbar > div.sup { background: repeating-linear-gradient(45deg, var(--pen) 0 2px, transparent 2px 5px); } /* quota da integratori */
 .mv { font: 400 17px var(--font-display); white-space: nowrap; }
 .mv b { font-weight: 700; }
 .mv.over { color: var(--flame-text); }
@@ -363,17 +369,45 @@ const MICROS = [
   ["Ferro", "mg", 10], ["Magnesio", "mg", 240], ["Vitamina C", "mg", 105], ["Vitamina D", "µg", 15], ["Vitamina B12", "µg", 2.4],
 ];
 
-// Somme del giorno i (0=Lun) per quanto spuntato + fuori piano (solo kcal)
+const SOD = MICROS.findIndex(m => m[0] === "Sodio"); // in etichetta c'è il sale: sodio mg = sale g × 400
+
+// Somme del giorno i (0=Lun): spuntato + fuori piano (rapido = solo kcal) → mac/mic; integratori spuntati → sup (micro a parte)
 function dayStats(i) {
   const d = DIET[i], k = iso(i - today), done = new Set(eaten[k] || []);
-  const mac = [0, 0, 0, 0], mic = MICROS.map(() => 0);
+  const mac = [0, 0, 0, 0], mic = MICROS.map(() => 0), sup = MICROS.map(() => 0);
   d.meals.forEach((m, mi) => m.foods.forEach((f, fi) => {
     if (!done.has(mi + "-" + fi)) return;
     f.v.forEach((v, j) => mac[j] += v);
     f.mic.forEach((v, j) => mic[j] += v);
   }));
-  mac[0] += (offplan[k] || []).reduce((s, x) => s + x.k, 0); // ponytail: fuori piano solo kcal, aggiungi P/C/G se servono
-  return { d, mac, mic };
+  for (const x of offplan[k] || []) {
+    mac[0] += x.k;
+    x.v?.forEach((v, j) => mac[j + 1] += v);
+    x.mic?.forEach((v, j) => mic[j] += v);
+  }
+  for (const n of suptaken[k] || []) supps.find(s => s.n === n)?.mic.forEach((v, j) => sup[j] += v);
+  return { d, mac, mic, sup };
+}
+
+// Testo dell'etichetta (Live Text / Google Lens, incollato) → campi per 100 g del form fuori piano
+// ponytail: primo numero dopo l'etichetta; se l'OCR separa la colonna dei valori dai nomi sbaglia → si corregge nei campi
+const LABEL_RE = { h1: "proteine|proteins?", h2: "carboidrati|carbohydrates?", h3: "grassi|fats?|lipidi" };
+const MICRO_RE = { Fibre: "fibr[ae]|fib(?:er|re)s?", Sodio: "sale|salt", Potassio: "potassio|potassium", Calcio: "calcio|calcium",
+  Ferro: "ferro|iron", Magnesio: "magnesio|magnesium", "Vitamina C": "vitamin[ae]? c", "Vitamina D": "vitamin[ae]? d", "Vitamina B12": "vitamin[ae]? b12" };
+MICROS.forEach(([n], j) => { if (MICRO_RE[n]) LABEL_RE["m" + j] = MICRO_RE[n]; });
+function parseLabel(text) {
+  const t = text.toLowerCase().replace(/(\d),(\d)/g, "$1.$2"), N = "(\\d+(?:\\.\\d+)?)", r = {};
+  const all = re => [...t.matchAll(new RegExp(re, "g"))].map(m => +m[1]);
+  const kj = [...all(N + "\\s*kj"), ...all("kj\\s*[:=]?\\s*" + N)][0];
+  const kc = [...all(N + "\\s*kcal"), ...all("kcal\\s*[:=]?\\s*" + N)];
+  // "kJ 1550 kcal 370": 1550 è sia dopo kJ che prima di kcal → vince il valore più vicino a kJ / 4,184
+  if (kc.length) r.h0 = kj ? kc.reduce((a, b) => Math.abs(b - kj / 4.184) < Math.abs(a - kj / 4.184) ? b : a) : kc[0];
+  else if (kj) r.h0 = Math.round(kj / 4.184);
+  for (const [f, re] of Object.entries(LABEL_RE)) {
+    const m = t.match(new RegExp(`\\b(?:${re})\\b[^\\d]{0,20}?${N}`));
+    if (m) r[f] = +m[1];
+  }
+  return r;
 }
 
 // giorno i (0 = lun) chiuso = tutti gli alimenti di tutti i pasti spuntati (8)
@@ -384,7 +418,7 @@ const LV = [[1, "A DIGIUNO"], [25, "RISCALDAMENTO"], [50, "IN SPINTA"], [75, "IN
 let prevDone = null; // tessere "fatte" al render precedente: il timbro anima solo al passaggio da non fatta a fatta
 
 function renderStats() {
-  const { d, mac, mic } = dayStats(today), left = d.tot[0] - mac[0], over = left < 0;
+  const { d, mac, mic, sup } = dayStats(today), left = d.tot[0] - mac[0], over = left < 0;
   const done = new Set(eaten[iso(0)] || []);
   let next = null, mealsDone = 0;
   const mealDots = d.meals.map((m, mi) => {
@@ -394,10 +428,12 @@ function renderStats() {
   });
   let hit = 0, goals = 0;
   const micros = MICROS.map(([name, u, t, lim], j) => {
-    const got = mic[j], v = u === "µg" ? Math.round(got * 10) / 10 : Math.round(got);
+    const rnd = x => u === "µg" ? Math.round(x * 10) / 10 : Math.round(x);
+    const got = mic[j] + sup[j], v = rnd(got), s = rnd(sup[j]);
     const isOver = !!lim && got > t, ok = !lim && got >= t; // il sodio (limite) non entra nel conteggio
     if (!lim) { goals++; if (ok) hit++; }
-    return { name, u, t, lim, got, v, isOver, ok };
+    const wFood = Math.min(100, mic[j] / t * 100), wSup = Math.min(100, got / t * 100) - wFood;
+    return { name, u, t, lim, got, v, s, wFood, wSup, isOver, ok };
   });
   const weekClosed = DIET.map((_, i) => closed(i)), nClosed = weekClosed.filter(Boolean).length;
   let streak = 0;
@@ -468,9 +504,9 @@ function renderStats() {
       <div class="sec mt24"><span class="sq" style="--c:var(--lime)">${icon("leaf")}</span><h2 class="t">Micro</h2><span class="lbl12">STIMA / OBIETTIVO</span></div>
       <div class="micros">${micros.map(r => `<div class="mrow">
         <div><span>${r.name}${r.lim ? " <small>max</small>" : ""}</span></div>
-        <div><div class="mbar ${r.isOver ? "over" : r.ok ? "ok" : ""}" role="progressbar" aria-label="${r.name}" aria-valuenow="${r.v}" aria-valuemin="0" aria-valuemax="${r.t}"><div style="width:${Math.min(100, r.got / r.t * 100)}%"></div></div></div>
-        <div><span class="mv ${r.isOver ? "over" : ""}"><b>${num(r.v)}</b> / ${num(r.t)} ${r.u}${r.isOver ? " · oltre" : r.ok ? " · centrato" : ""}</span></div></div>`).join("")}</div>
-      <p class="foot">Stime da valori medi per 100 g. Il fuori piano conta solo nelle kcal.</p>
+        <div><div class="mbar ${r.isOver ? "over" : r.ok ? "ok" : ""}" role="progressbar" aria-label="${r.name}${r.s ? `, di cui ${num(r.s)} ${r.u} da integratori` : ""}" aria-valuenow="${r.v}" aria-valuemin="0" aria-valuemax="${r.t}"><div style="width:${r.wFood}%"></div>${r.wSup > 0 ? `<div class="sup" style="width:${r.wSup}%"></div>` : ""}</div></div>
+        <div><span class="mv ${r.isOver ? "over" : ""}"><b>${num(r.v)}</b> / ${num(r.t)} ${r.u}${r.isOver ? " · oltre" : r.ok ? " · centrato" : ""}${r.s ? `<small class="sd">di cui ${num(r.s)} integr.</small>` : ""}</span></div></div>`).join("")}</div>
+      <p class="foot">Stime da valori medi per 100 g. Il fuori piano rapido conta solo nelle kcal; il tratteggio è la quota da integratori.</p>
     </div>`;
   prevDone = new Set(tiles.filter(t => t.done).map(t => t.l));
   $("#sub-diet").textContent = d.day;
@@ -485,9 +521,16 @@ function toggleEat(keys) {
   prune(eaten); save("eaten", eaten); renderDiet();
 }
 
-let offplan = load("offplan", {}); // { "2026-11-15": [{ n: "Caffè e biscotto", k: 120 }] }
+// { "2026-11-15": [{ n: "Caffè e biscotto", k: 120 }, { n: "Cracker", k: 128, g: 30, v: [P, C, G], mic: [..MICROS] }] }
+// voce dettagliata: valori già scalati sulla porzione; mic allineato a MICROS per indice (non riordinare MICROS)
+let offplan = load("offplan", {});
 const prune = o => { const min = iso(-7); for (const x in o) if (x < min) delete o[x]; }; // tieni solo l'ultima settimana
 function saveOff() { prune(offplan); save("offplan", offplan); renderDiet(); }
+
+let supps = load("supps", []);       // catalogo: [{ n: "Vitamina D", mic: [..MICROS per dose] }]
+let suptaken = load("suptaken", {}); // { "2026-11-16": ["Vitamina D"] }
+function saveSup() { prune(suptaken); save("supps", supps); save("suptaken", suptaken); renderDiet(); }
+const dose = s => MICROS.map(([n, u], j) => s.mic[j] ? `${n.replace("Vitamina ", "Vit. ")} ${num(s.mic[j])} ${u}` : "").filter(Boolean).join(" · ");
 
 let subsOpen = false; // stato di <details> Sostituzioni, sopravvive ai re-render
 
@@ -535,12 +578,37 @@ function renderDiet() {
     ${meals}
     <section class="mt26">
       <div class="sec"><span class="sq" style="--c:var(--pink)">${icon("cookie")}</span><h2 class="t">Fuori piano</h2><span class="d17">${offK} kcal</span></div>
-      ${extras.map((x, i) => `<div class="line"><span class="n hand">${esc(x.n)}</span><span class="hand">${x.k} kcal</span>
+      ${extras.map((x, i) => `<div class="line"><span class="n hand">${esc(x.n)}${x.g ? `<small class="sd">${x.g} g · P ${x.v[0]} · C ${x.v[1]} · G ${x.v[2]}</small>` : ""}</span><span class="hand">${x.k} kcal</span>
         <button class="xbtn" data-offdel="${i}" aria-label="Elimina ${esc(x.n)}">${icon("x", 18)}</button></div>`).join("")}
-      <form id="offadd" class="addrow">
-        <label class="fld"><span>COSA HAI MANGIATO</span><input name="n" placeholder="scrivi qui" required></label>
-        <label class="fld kcal"><span>KCAL</span><input name="k" type="number" inputmode="numeric" min="1" max="5000" placeholder="0" required></label>
-        <button class="plus" aria-label="Aggiungi al fuori piano">${icon("plus", 22)}</button>
+      <form id="offadd">
+        <div class="addrow">
+          <label class="fld"><span>COSA HAI MANGIATO</span><input name="n" placeholder="scrivi qui" required></label>
+          <label class="fld kcal"><span>KCAL</span><input name="k" type="number" inputmode="numeric" min="1" max="5000" placeholder="0" required></label>
+          <button class="plus" aria-label="Aggiungi al fuori piano">${icon("plus", 22)}</button>
+        </div>
+        <details class="more"><summary>VALORI PER 100 G · OPZIONALE ${icon("down", 16)}</summary>
+          <label class="fld"><span>TESTO DELL'ETICHETTA</span><textarea name="label" rows="3" placeholder="incolla qui"></textarea></label>
+          <p class="foot">Inquadra la tabella con "Scansiona testo" (iPhone) o Google Lens, copia e incolla: i campi si compilano da soli. Controllali prima di salvare.</p>
+          <div class="fgrid">${[["g", "GRAMMI MANGIATI"], ["h0", "KCAL"], ["h1", "PROTEINE g"], ["h2", "CARBO g"], ["h3", "GRASSI g"],
+            ...MICROS.map(([n, u], j) => ["m" + j, j === SOD ? "SALE g" : `${n.toUpperCase()} ${u}`])].map(([f, l]) =>
+            `<label class="fld"><span>${l}</span><input name="${f}" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>`).join("")}</div>
+        </details>
+      </form>
+    </section>
+    <section class="mt26">
+      <div class="sec"><span class="sq" style="--c:var(--lime)">${icon("bottle")}</span><h2 class="t">Integratori</h2></div>
+      ${supps.map(s => { const on = (suptaken[k] || []).includes(s.n); return `<div class="line ${on ? "done" : ""}" data-sup="${esc(s.n)}" role="checkbox" aria-checked="${on}" tabindex="0">
+        <span class="n hand">${esc(s.n)}<small class="sd">${dose(s)}</small></span>
+        <button class="xbtn" data-supdel="${esc(s.n)}" aria-label="Togli ${esc(s.n)} dal catalogo">${icon("x", 18)}</button>${box()}</div>`; }).join("")}
+      <form id="supadd">
+        <div class="addrow">
+          <label class="fld"><span>NUOVO INTEGRATORE</span><input name="n" placeholder="scrivi qui" required></label>
+          <button class="plus" aria-label="Aggiungi integratore">${icon("plus", 22)}</button>
+        </div>
+        <details class="more"><summary>MICRO PER DOSE ${icon("down", 16)}</summary>
+          <div class="fgrid">${MICROS.map(([n, u, , lim], j) => lim ? "" :
+            `<label class="fld"><span>${n.toUpperCase()} ${u}</span><input name="m${j}" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>`).join("")}</div>
+        </details>
       </form>
     </section>
     <details class="subs mt26"${subsOpen ? " open" : ""}>
@@ -603,18 +671,52 @@ $("#days").onclick = e => { const b = e.target.closest("[data-d]"); if (b) { day
 $("#diet-body").onclick = e => {
   const del = e.target.closest("[data-offdel]");
   if (del) { offplan[dayKey()].splice(+del.dataset.offdel, 1); return saveOff(); }
+  const sdel = e.target.closest("[data-supdel]");
+  if (sdel) {
+    const n = sdel.dataset.supdel;
+    if (confirm(`Togliere "${n}" dal catalogo integratori?`)) { supps = supps.filter(s => s.n !== n); saveSup(); }
+    return;
+  }
+  const sp = e.target.closest("[data-sup]"); if (sp) return toggleSup(sp.dataset.sup);
   const x = e.target.closest("[data-eat]"); if (x) toggleEat(x.dataset.eat.split(" "));
 };
+function toggleSup(n) {
+  const k = dayKey(), s = new Set(suptaken[k] || []);
+  s.has(n) ? s.delete(n) : s.add(n);
+  suptaken[k] = [...s]; saveSup();
+}
 $("#diet-body").addEventListener("submit", e => {
   e.preventDefault();
-  const f = e.target, n = f.n.value.trim(), k = Math.round(+f.k.value);
-  if (!n || !(k > 0 && k <= 5000)) return;
+  const f = e.target, n = f.n.value.trim(), val = x => Math.max(0, +f[x]?.value || 0);
+  if (!n) return;
+  if (f.id === "supadd") {
+    const mic = MICROS.map((_, j) => val("m" + j));
+    if (!mic.some(Boolean)) { f.querySelector("details").open = true; return f.m0.focus(); }
+    supps = [...supps.filter(s => s.n !== n), { n, mic }]; return saveSup();
+  }
+  const g = val("g"), h = [0, 1, 2, 3].map(j => val("h" + j)), s = g / 100;
+  if (g && h[0]) { // dettagliata: per 100 g × grammi mangiati
+    const mic = MICROS.map((_, j) => Math.round(val("m" + j) * (j === SOD ? 400 : 1) * s * 10) / 10);
+    (offplan[dayKey()] ||= []).push({ n, k: Math.round(h[0] * s), g, v: h.slice(1).map(x => Math.round(x * s)), mic });
+    return saveOff();
+  }
+  const k = Math.round(+f.k.value);
+  if (!(k > 0 && k <= 5000)) return;
   (offplan[dayKey()] ||= []).push({ n, k }); saveOff();
+});
+$("#diet-body").addEventListener("input", e => {
+  const f = e.target.form;
+  if (f?.id !== "offadd") return;
+  if (e.target.name === "label") for (const [x, v] of Object.entries(parseLabel(e.target.value))) f[x].value = v;
+  f.k.required = !(+f.g.value > 0 && +f.h0.value > 0); // con grammi + kcal/100 g le kcal rapide si calcolano
 });
 $("#diet-body").addEventListener("toggle", e => { if (e.target.classList?.contains("subs")) subsOpen = e.target.open; }, true);
 $("#diet-body").onkeydown = e => {
+  if (e.key !== " " && e.key !== "Enter") return;
+  const sp = e.target.closest("[data-sup]");
+  if (sp && e.target === sp) { e.preventDefault(); return toggleSup(sp.dataset.sup); }
   const x = e.target.closest("[data-eat]");
-  if (x && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggleEat(x.dataset.eat.split(" ")); }
+  if (x) { e.preventDefault(); toggleEat(x.dataset.eat.split(" ")); }
 };
 
 function toggle(li) {
@@ -693,6 +795,14 @@ async function boot() {
   };
 }
 
+if (location.search.includes("test")) { // self-check del parser etichette: apri con ?test, guarda la console
+  const eq = (txt, exp) => { const r = parseLabel(txt); console.assert(Object.entries(exp).every(([k, v]) => r[k] === v), "parseLabel", txt, r); };
+  eq("Valori nutrizionali medi per 100 g\nEnergia 1550 kJ / 370 kcal\nGrassi 2,5 g\ndi cui acidi grassi saturi 0,5 g\nCarboidrati 72 g\ndi cui zuccheri 3 g\nFibre 6 g\nProteine 12 g\nSale 0,9 g",
+    { h0: 370, h1: 12, h2: 72, h3: 2.5, m0: 6, m1: 0.9 });
+  eq("Energy kJ 1550 kcal 370 Fat 2.5g of which saturates 0.5g Carbohydrate 72g Protein 12g Salt 0.9g Calcium 120 mg Vitamin B12 1.2 µg",
+    { h0: 370, h1: 12, h2: 72, h3: 2.5, m1: 0.9, m3: 120, m8: 1.2 });
+  console.log("parseLabel: self-check eseguito");
+}
 boot();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
