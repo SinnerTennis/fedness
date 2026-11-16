@@ -91,6 +91,7 @@ section[hidden] { display: none; }
 .more summary { padding: 10px 0 4px; font: 600 12px var(--font-display); letter-spacing: .1em; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 .more[open] summary svg { transform: rotate(180deg); }
 .more textarea { width: 100%; margin-top: 4px; padding: 6px; border: 1.5px solid var(--ink); border-radius: 0; background: transparent; font: 400 15px var(--font-body); color: var(--pen); resize: vertical; }
+.reset.ocr { margin-top: 8px; }
 .fgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; margin-top: 8px; }
 .plus { flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 3px; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; }
 .xbtn { flex: none; width: 44px; height: 44px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; }
@@ -320,6 +321,7 @@ const ICONS = {
   fish: "M16.69 7.44a6.973 6.973 0 0 0 -1.69 4.56c0 1.747 .64 3.345 1.699 4.571 M2 9.504c7.715 8.647 14.75 10.265 20 2.498c-5.25 -7.761 -12.285 -6.142 -20 2.504 M18 11v.01 M11.5 10.5c-.667 1 -.667 2 0 3",
   milk: "M8 6h8v-2a1 1 0 0 0 -1 -1h-6a1 1 0 0 0 -1 1v2 M16 6l1.094 1.759a6 6 0 0 1 .906 3.17v8.071a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8.071a6 6 0 0 1 .906 -3.17l1.094 -1.759 M10 16a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M10 10h4",
   bowl: "M4 11h16a1 1 0 0 1 1 1v.5c0 1.5 -2.517 5.573 -4 6.5v1a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-1c-1.687 -1.054 -4 -5 -4 -6.5v-.5a1 1 0 0 1 1 -1 M8 7c1.657 0 3 -.895 3 -2s-1.343 -2 -3 -2s-3 .895 -3 2s1.343 2 3 2 M11 5h9",
+  camera: "M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2 M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0",
   bottle: "M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2 M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537 M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805",
 };
 const icon = (k, size = 20) =>
@@ -396,7 +398,7 @@ const MICRO_RE = { Fibre: "fibr[ae]|fib(?:er|re)s?", Sodio: "sale|salt", Potassi
   Ferro: "ferro|iron", Magnesio: "magnesio|magnesium", "Vitamina C": "vitamin[ae]? c", "Vitamina D": "vitamin[ae]? d", "Vitamina B12": "vitamin[ae]? b12" };
 MICROS.forEach(([n], j) => { if (MICRO_RE[n]) LABEL_RE["m" + j] = MICRO_RE[n]; });
 function parseLabel(text) {
-  const t = text.toLowerCase().replace(/(\d),(\d)/g, "$1.$2"), N = "(\\d+(?:\\.\\d+)?)", r = {};
+  const t = text.toLowerCase().replace(/\bo(?=[.,]\d)/g, "0").replace(/(\d),(\d)/g, "$1.$2"), N = "(\\d+(?:\\.\\d+)?)", r = {};
   const all = re => [...t.matchAll(new RegExp(re, "g"))].map(m => +m[1]);
   const kj = [...all(N + "\\s*kj"), ...all("kj\\s*[:=]?\\s*" + N)][0];
   const kc = [...all(N + "\\s*kcal"), ...all("kcal\\s*[:=]?\\s*" + N)];
@@ -587,8 +589,10 @@ function renderDiet() {
           <button class="plus" aria-label="Aggiungi al fuori piano">${icon("plus", 22)}</button>
         </div>
         <details class="more"><summary>VALORI PER 100 G · OPZIONALE ${icon("down", 16)}</summary>
-          <label class="fld"><span>TESTO DELL'ETICHETTA</span><textarea name="label" rows="3" placeholder="incolla qui"></textarea></label>
-          <p class="foot">Inquadra la tabella con "Scansiona testo" (iPhone) o Google Lens, copia e incolla: i campi si compilano da soli. Controllali prima di salvare.</p>
+          <button type="button" class="reset ocr" data-ocr>${icon("camera")}Foto etichetta</button>
+          <input type="file" name="photo" accept="image/*" capture="environment" hidden>
+          <p class="foot" id="ocrst" aria-live="polite">Fotografa la tabella nutrizionale dritta e ben illuminata: leggo i valori per 100 g. Controllali prima di salvare.</p>
+          <label class="fld"><span>TESTO LETTO</span><textarea name="label" rows="3" placeholder="o incolla qui"></textarea></label>
           <div class="fgrid">${[["g", "GRAMMI MANGIATI"], ["h0", "KCAL"], ["h1", "PROTEINE g"], ["h2", "CARBO g"], ["h3", "GRASSI g"],
             ...MICROS.map(([n, u], j) => ["m" + j, j === SOD ? "SALE g" : `${n.toUpperCase()} ${u}`])].map(([f, l]) =>
             `<label class="fld"><span>${l}</span><input name="${f}" type="number" inputmode="decimal" min="0" step="any" placeholder="0"></label>`).join("")}</div>
@@ -677,6 +681,7 @@ $("#diet-body").onclick = e => {
     if (confirm(`Togliere "${n}" dal catalogo integratori?`)) { supps = supps.filter(s => s.n !== n); saveSup(); }
     return;
   }
+  if (e.target.closest("[data-ocr]")) return $("#offadd").photo.click();
   const sp = e.target.closest("[data-sup]"); if (sp) return toggleSup(sp.dataset.sup);
   const x = e.target.closest("[data-eat]"); if (x) toggleEat(x.dataset.eat.split(" "));
 };
@@ -704,11 +709,47 @@ $("#diet-body").addEventListener("submit", e => {
   if (!(k > 0 && k <= 5000)) return;
   (offplan[dayKey()] ||= []).push({ n, k }); saveOff();
 });
+const syncReq = f => { f.k.required = !(+f.g.value > 0 && +f.h0.value > 0); }; // con grammi + kcal/100 g le kcal rapide si calcolano
+const fillLabel = (f, txt) => { const r = parseLabel(txt); for (const [x, v] of Object.entries(r)) f[x].value = v; syncReq(f); return Object.keys(r).length; };
 $("#diet-body").addEventListener("input", e => {
   const f = e.target.form;
   if (f?.id !== "offadd") return;
-  if (e.target.name === "label") for (const [x, v] of Object.entries(parseLabel(e.target.value))) f[x].value = v;
-  f.k.required = !(+f.g.value > 0 && +f.h0.value > 0); // con grammi + kcal/100 g le kcal rapide si calcolano
+  e.target.name === "label" ? fillLabel(f, e.target.value) : syncReq(f);
+});
+
+// OCR in locale: Tesseract.js (Apache-2.0) in ocr/, caricato solo al primo uso (~5,6 MB, poi in cache)
+// ponytail: solo core SIMD (iOS 16.4+, Chrome 91+); aggiungi tesseract-core-lstm.wasm.js e corePath a cartella se serve un telefono più vecchio
+let ocrWorker = null;
+async function ocr(file) {
+  const st = t => { const s = $("#ocrst"); if (s) s.textContent = t; }, abs = p => new URL(p, location.href).href;
+  if (!window.Tesseract) {
+    st("Preparo il lettore…");
+    await new Promise((ok, ko) => document.head.append(Object.assign(document.createElement("script"), { src: "ocr/tesseract.min.js", onload: ok, onerror: ko })));
+  }
+  ocrWorker ||= Tesseract.createWorker("ita", 1, {
+    workerPath: abs("ocr/worker.min.js"), corePath: abs("ocr/tesseract-core-simd-lstm.wasm.js"), langPath: abs("ocr"), workerBlobURL: false,
+    logger: m => m.progress != null && st(`${m.status === "recognizing text" ? "Leggo l'etichetta" : "Preparo il lettore"}… ${Math.round(m.progress * 100)}%`),
+  }).then(async w => { await w.setParameters({ tessedit_pageseg_mode: "6" }); return w; }) // 6 = blocco unico, riga per riga: tiene nome e valore sulla stessa riga
+    .catch(err => { ocrWorker = null; throw err; });
+  const w = await ocrWorker;
+  // foto da 12 MP → lato lungo 2000 px: molto più veloce, stessa lettura
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.src = url; await img.decode(); URL.revokeObjectURL(url);
+  const sc = Math.min(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  return (await w.recognize(c)).data.text;
+}
+$("#diet-body").addEventListener("change", async e => {
+  if (e.target.name !== "photo" || !e.target.files[0]) return;
+  const file = e.target.files[0], st = t => { const s = $("#ocrst"); if (s) s.textContent = t; };
+  e.target.value = "";
+  try {
+    const text = await ocr(file), f = $("#offadd"); // il form può essere stato ridisegnato durante l'attesa
+    f.label.value = text;
+    const n = fillLabel(f, text);
+    st(n ? `Letti ${n} valori: controllali e scrivi i grammi mangiati.` : "Nessun valore riconosciuto: riprova più vicino, dritto e con più luce.");
+  } catch { st("Lettura non riuscita. Riprova, o incolla il testo qui sotto."); }
 });
 $("#diet-body").addEventListener("toggle", e => { if (e.target.classList?.contains("subs")) subsOpen = e.target.open; }, true);
 $("#diet-body").onkeydown = e => {
